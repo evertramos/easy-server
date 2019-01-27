@@ -36,7 +36,7 @@ loadsymlink() {
     fi
 
     # Create symlink for new bash aliases
-    ln -s $HOME/$SCRIPT_PATH/$1 $HOME/$1
+    ln -s $SCRIPT_PATH/$1 $HOME/$1
 }
 
 # Load aliases
