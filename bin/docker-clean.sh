@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Clean Everything in Docker Environment
+docker system prune --all
+
 # Remove todos os containeres parados
 docker rm -v $(docker ps -a -q)
 
@@ -13,7 +16,6 @@ docker rmi -f $(docker images | grep "none" | awk '/ / { print $3 }')
 
 # Todas as images que não estão em uso
 docker rmi -f $(docker images | awk '/ / { print $3 }')
-
 
 #docker volume rm $(docker volume ls -qf dangling=true)
 
