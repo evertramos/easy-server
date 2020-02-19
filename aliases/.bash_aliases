@@ -74,6 +74,7 @@ alias kdc='kubectl config delete-context'
 # Kubernetes actions
 alias kaf='kubectl apply -f'
 alias kep='kubectl exec -it $(kubectl get pod -o jsonpath="{.items[0].metadata.name}") -- bash'
+alias klc='kubectl logs -f $(kubectl get pod -o jsonpath="{.items[0].metadata.name}") -- eagendas-h-php'
 
 # Other Aliases
 # alias gg='cd /your/work/directory'  # WORKDIR
