@@ -55,14 +55,25 @@ if [ -d "$HOME/.composer/vendor/bin" ] ; then
     PATH="$HOME/.composer/vendor/bin:$PATH"
 fi
 
-# Kubernetes
+# Kubernetes basics
 alias k='kubectl'
 alias kg='kubectl get'
 alias kgp='kubectl get pods'
 alias kga='kubectl get pods --all-namespaces'
 alias kgs='kubectl get service'
 alias kgn='kubectl get nodes'
+alias kgd='kubectl get deployments'
+alias kgss='kubectl get secrets'
 
+# Kubernetes config
+alias kgc='kubectl config get-contexts'
+alias ksc='kubectl config set-context'
+alias kuc='kubectl config use-context'
+alias kdc='kubectl config delete-context'
+
+# Kubernetes actions
+alias kaf='kubectl apply -f'
+alias kep='kubectl exec -it $(kubectl get pod -o jsonpath="{.items[0].metadata.name}") -- bash'
 
 # Other Aliases
-alias gg='cd /your/work/directory'  # WORKDIR
+# alias gg='cd /your/work/directory'  # WORKDIR
