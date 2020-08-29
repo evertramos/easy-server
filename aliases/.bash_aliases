@@ -77,4 +77,6 @@ alias kep='kubectl exec -it $(kubectl get pod -o jsonpath="{.items[0].metadata.n
 alias klc='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[0].metadata.name}") -- '
 
 # Other Aliases
-# alias gg='cd /your/work/directory'  # WORKDIR
+alias gg='cd /server'         # Basedir
+alias ggs='cd /server/sites'  # Sites
+alias ggb='cd /server/backup'  # Backup

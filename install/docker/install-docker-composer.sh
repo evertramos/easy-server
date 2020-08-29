@@ -6,8 +6,7 @@
 #
 #---------------------------------------------------------------------------------
 
-COMPOSE_VERSION=1.25.3
-#COMPOSE_VERSION=1.21.2
+COMPOSE_VERSION=1.26.2
 
 # Download the latest release of docker
 sudo curl -L https://github.com/docker/compose/releases/download/$COMPOSE_VERSION/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
