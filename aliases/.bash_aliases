@@ -79,4 +79,6 @@ alias klc='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[0].
 # Other Aliases
 alias gg='cd /server'         # Basedir
 alias ggs='cd /server/sites'  # Sites
-alias ggb='cd /server/backup'  # Backup
+alias ggb='cd /server/backup' # Backup
+alias ggp='cd /server/proxy'  # Proxy
+alias ggd='cd /server/dev'    # Development
