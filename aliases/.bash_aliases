@@ -1,13 +1,19 @@
-# ---------------------------------------------------------------------
+#---------------------------------------------------------------------
 #
 # Basic Aliases
 # 
-# ---------------------------------------------------------------------
+#---------------------------------------------------------------------
 
 # Bash Aliases
 alias l='ls -la'
 alias df='df -h'
 alias apt-get='sudo apt-get'
+alias apt='sudo apt-get'
+
+# Python
+alias p='python3.8'
+alias p3='python3'
+alias p2='python2'
 
 # Git Aliases
 alias gs='git status'
@@ -16,6 +22,7 @@ alias gaa='git add --all'
 alias gc='git commit -m'
 alias gp='git push'
 alias gpp='git pull'
+alias gpps='git pull --recurse-sumoduless'
 alias gb='git branch'
 alias gk='git checkout'
 
@@ -76,9 +83,14 @@ alias kaf='kubectl apply -f'
 alias kep='kubectl exec -it $(kubectl get pod -o jsonpath="{.items[0].metadata.name}") -- bash'
 alias klc='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[0].metadata.name}") -- '
 
+# Apps
+alias tor='cd ~/Downloads/tor && ./start-tor-browser.desktop && cd -'
+alias code='code-insiders'
+
 # Other Aliases
 alias gg='cd /server'         # Basedir
 alias ggs='cd /server/sites'  # Sites
 alias ggb='cd /server/backup' # Backup
 alias ggp='cd /server/proxy'  # Proxy
 alias ggd='cd /server/dev'    # Development
+
