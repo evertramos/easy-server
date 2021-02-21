@@ -1,4 +1,6 @@
-#!/usr/bin/env bash
+#!/bin/bash
+
+# UBUNTU only
 
 # Uninstall old versions
 sudo apt-get remove docker docker-engine docker.io
@@ -36,3 +38,4 @@ sudo groupadd docker
 sudo usermod -aG docker $USER
 
 exit 0
+
