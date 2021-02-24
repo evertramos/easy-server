@@ -22,7 +22,7 @@ alias gaa='git add --all'
 alias gc='git commit -m'
 alias gp='git push'
 alias gpp='git pull'
-alias gpps='git pull --recurse-sumoduless'
+alias gpps='git pull --recurse-submodules'
 alias gb='git branch'
 alias gk='git checkout'
 
