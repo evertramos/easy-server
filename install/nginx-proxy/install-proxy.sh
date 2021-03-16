@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+echo "This script must be updated to the latest version of nginx-proxy-automation"
+
+exit 0 
+
 # Create a User Home root folder for webproxy
 mkdir ~/proxy
 cd ~/proxy
