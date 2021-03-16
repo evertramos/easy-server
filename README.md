@@ -1,2 +1,2 @@
 # easy-server
-Linux Scripts to Automate Tasks
+Linux scripts to automate simple tasks
