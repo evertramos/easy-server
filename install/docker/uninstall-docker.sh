@@ -11,4 +11,3 @@ sudo rm -rf /var/lib/docker
 sudo rm -rf /var/lib/containerd
 
 exit 0
-
