@@ -32,6 +32,8 @@ alias a='php artisan'
 # Docker
 alias d='docker'
 alias dl='docker ps'
+alias sdl='docker ps --format "table {{.Image}}\t{{.Status}}\t{{.Names}}"'
+alias pdl='docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"'
 alias dla='docker ps -a'
 alias dr='docker run'
 alias de='docker exec'
