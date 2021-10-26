@@ -1,4 +1,6 @@
-#!/usr/bin/env bash
+#!/bin/bash
+
+PROXY_BASE_PATH=~/srv/proxy
 
 # Create a User Home root folder for webproxy
 mkdir ~/proxy

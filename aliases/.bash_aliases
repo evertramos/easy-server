@@ -37,6 +37,7 @@ alias dr='docker run'
 alias de='docker exec'
 alias di='docker images'
 alias dv='docker volume'
+alias dlv='docker volume ls'
 alias dn='docker network'
 alias dln='docker network ls'
 alias din='docker network inspect'
@@ -83,6 +84,10 @@ alias kaf='kubectl apply -f'
 alias kep='kubectl exec -it $(kubectl get pod -o jsonpath="{.items[0].metadata.name}") -- bash'
 alias klc='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[0].metadata.name}") -- '
 
+# Flutter basics
+alias f='flutter'
+alias fc='flutter config'
+
 # Apps
 alias tor='cd ~/Downloads/tor && ./start-tor-browser.desktop && cd -'
 alias code='code-insiders'
@@ -94,3 +99,5 @@ alias ggb='cd /server/backup' # Backup
 alias ggp='cd /server/proxy'  # Proxy
 alias ggd='cd /server/dev'    # Development
 
+# Sail
+alias sail='[ -f sail ] && $PWD/sail || bash vendor/bin/sail'
