@@ -1,41 +1,40 @@
 #!/bin/bash
 
-# UBUNTU only
+#---------------------------------------------------------------------------------
+# Installing Docker
+#---------------------------------------------------------------------------------
 
-# Uninstall old versions
-sudo apt-get remove docker docker-engine docker.io
+# Create temporary folder (will not be deleted)
+mkdir -p ./temp && cd temp
 
-# Update the Ubuntu Repo
-sudo apt-get update
+# Get the latest version of get-docker.sh script
+curl -fsSL https://get.docker.com -o get-docker.sh
 
-# Install packages to allow apt to use a repository over HTTPS
-sudo apt-get install -y \
-    apt-transport-https \
-    ca-certificates \
-    curl \
-    gnupg-agent \
-    software-properties-common
-
-# Add Docker’s official GPG key
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-
-# Add Docker repository for Ubuntu
-sudo add-apt-repository \
-   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-   $(lsb_release -cs) \
-   stable"
-
-# Update the Ubuntu Repo (again)
-sudo apt-get update
-
-# Install Docker
-sudo apt-get install -y docker-ce docker-ce-cli containerd.io
-
-# Create a docker group
-sudo groupadd docker
+# Run get-docker (as sudo)
+sudo sh get-docker.sh
 
 # Add current user to group
 sudo usermod -aG docker $USER
 
-exit 0
+#---------------------------------------------------------------------------------
+# Install Docker Compose
+#---------------------------------------------------------------------------------
 
+COMPOSE_VERSION=$(curl --silent "https://api.github.com/repos/docker/compose/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+
+# Download the latest release of docker
+sudo curl -L https://github.com/docker/compose/releases/download/$COMPOSE_VERSION/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
+
+# Apply permissions
+sudo chmod +x /usr/local/bin/docker-compose
+
+# Install command completion
+sudo curl -L https://raw.githubusercontent.com/docker/compose/$COMPOSE_VERSION/contrib/completion/bash/docker-compose -o /etc/bash_completion.d/docker-compose
+
+#---------------------------------------------------------------------------------
+# Check versions
+#---------------------------------------------------------------------------------
+docker version
+docker-compose version
+
+exit 0
