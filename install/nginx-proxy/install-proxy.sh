@@ -1,7 +1,7 @@
 #!/bin/bash
 
 NGINX_PROXY_EMAIL_ADDRESS=your.email@exemple.com
-NGINX_PROXY_BASE_PATH=~/temp/server/proxy/
+NGINX_PROXY_BASE_PATH=~/server/proxy/
 NGINX_PROXY_AUTOMATION_PATH=compose
 NGINX_PROXY_DATA_FILES=data
 
@@ -17,7 +17,7 @@ cd $NGINX_PROXY_AUTOMATION_PATH
 cp .env.sample .env
 
 # Get current IP Address
-NET_INTERFACES=( eth0 ens3 vpn )
+NET_INTERFACES=( eth0 ens3 )
 for i in "${NET_INTERFACES[@]}"; do
   NET_IP=$(ip address show $i | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
   if [[ $NET_IP =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
