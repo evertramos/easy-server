@@ -1,47 +1,47 @@
 #!/bin/bash
 
-PROXY_BASE_PATH=~/srv/proxy
+NGINX_PROXY_EMAIL_ADDRESS=your.email@exemple.com
+NGINX_PROXY_BASE_PATH=~/temp/server/proxy/
+NGINX_PROXY_AUTOMATION_PATH=compose
+NGINX_PROXY_DATA_FILES=data
 
-echo "This script must be updated to the latest version of nginx-proxy-automation"
+# Create nginx-proxy base path if it does not exists
+[[ ! -d "$NGINX_PROXY_BASE_PATH" ]] && mkdir -p $NGINX_PROXY_BASE_PATH && echo "The nginx-proxy base path '$NGINX_PROXY_BASE_PATH' was created sucessfuly!"
 
-exit 0 
+# Clone nginx-proxy latest version
+cd $NGINX_PROXY_BASE_PATH
+git clone --recurse-submodules https://github.com/evertramos/nginx-proxy-automation.git $NGINX_PROXY_AUTOMATION_PATH
+cd $NGINX_PROXY_AUTOMATION_PATH
 
-# Create a User Home root folder for webproxy
-mkdir ~/proxy
-cd ~/proxy
-
-# Clone repo
-git clone https://github.com/evertramos/docker-compose-letsencrypt-nginx-proxy-companion.git nginx-proxy
-
-# Enter the cloned folder
-cd nginx-proxy
-
-# Copy .env.sample to .env
+# Create .env file
 cp .env.sample .env
 
-# Busca o IP da máquina
-NET_IP=$(ip addr show ens3 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
-#NET_IP=$(ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
+# Get current IP Address
+NET_INTERFACES=( eth0 ens3 vpn )
+for i in "${NET_INTERFACES[@]}"; do
+  NET_IP=$(ip address show $i | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
+  if [[ $NET_IP =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    break
+  fi
+done
 
-# Substitute IP address in env file
-sed -i -e "s/0.0.0.0/$NET_IP/g" ~/proxy/nginx-proxy/.env
+# If we were able to identify the IP Address we will update the .env file
+if [[ ! $NET_IP =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  echo "We could not identify your IP Address, please update the .env and restart the nginx-proxy!"
+else
+  # Replace IP address in .env file
+  sed -i -e "s/0.0.0.0/$NET_IP/g" ${NGINX_PROXY_BASE_PATH%/}/${NGINX_PROXY_AUTOMATION_PATH%/}/.env
+fi
 
-# return to webproxy folder
-cd ..
+# Create the nginx-proxy data path
+NGINX_NGINX_PROXY_DATA_PATH=${NGINX_PROXY_BASE_PATH%/}/${NGINX_PROXY_DATA_FILES%/}
+[[ ! -d "$NGINX_NGINX_PROXY_DATA_PATH" ]] && mkdir -p $NGINX_NGINX_PROXY_DATA_PATH && echo "The nginx-proxy data path '$NGINX_NGINX_PROXY_DATA_PATH' was created sucessfuly!"
 
-# Create path for Webproxy files
-mkdir nginx-data
-cd nginx-data
+# Replace NGINX_DATA_PATH in .env file
+sed -i -e "s%./data%$NGINX_NGINX_PROXY_DATA_PATH%g" ${NGINX_PROXY_BASE_PATH%/}/${NGINX_PROXY_AUTOMATION_PATH%/}/.env
 
-# Get path
-NGINX_DATA_PATH=$(pwd)
-
-# Substitue nginx files in .env
-sed -i -e "s%/path/to/your/nginx/data%$NGINX_DATA_PATH%g" ~/proxy/nginx-proxy/.env
-
-# Start nginx-proxy
-cd ../nginx-proxy
-#./start.sh
-
+# Start nginx-proxy with basic configuration
+cd ${NGINX_PROXY_BASE_PATH%/}/${NGINX_PROXY_AUTOMATION_PATH%/}/bin
+./fresh-start.sh --data-files-location=$NGINX_NGINX_PROXY_DATA_PATH --default-email=$NGINX_PROXY_EMAIL_ADDRESS --skip-docker-image-check --use-nginx-conf-files --update-nginx-template --yes --silent
 
 exit 0
