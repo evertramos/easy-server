@@ -1,6 +1,6 @@
 #!/bin/bash
 
-NGINX_PROXY_EMAIL_ADDRESS=your.email@exemple.com
+NGINX_PROXY_EMAIL_ADDRESS=your.email@example.com
 NGINX_PROXY_BASE_PATH=~/server/proxy/
 NGINX_PROXY_AUTOMATION_PATH=compose
 NGINX_PROXY_DATA_FILES=data
