@@ -1,9 +1,11 @@
-# Easy Server
+# Easy Server :fire:
 
 Linux scripts to automate simple tasks in new servers!
 
-:fire:
+### Requirements
 
+- apt
+- sudo
 
 ### TODO
 
