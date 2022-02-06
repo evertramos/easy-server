@@ -25,6 +25,7 @@ alias gpp='git pull'
 alias gpps='git pull --recurse-submodules'
 alias gb='git branch'
 alias gk='git checkout'
+alias gmd='git checkout main && git merge --no-edit dev && git push --force && git checkout dev'
 
 # Laravel
 alias a='php artisan'
@@ -103,3 +104,6 @@ alias ggd='cd /server/dev'    # Development
 
 # Sail
 alias sail='[ -f sail ] && $PWD/sail || bash vendor/bin/sail'
+
+# Rust
+alias c='cargo'
