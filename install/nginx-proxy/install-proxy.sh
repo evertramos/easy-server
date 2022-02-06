@@ -16,7 +16,7 @@ cd $NGINX_PROXY_AUTOMATION_PATH
 # Get current IP Address
 NET_INTERFACES=( eth0 ens3 )
 for i in "${NET_INTERFACES[@]}"; do
-  NET_IP=$(ip address show $i | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
+  NET_IP=$(ip address show $i | grep "inet\b" | head -n 1 | awk '{print $2}' | cut -d/ -f1)
   if [[ $NET_IP =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     break
   fi
