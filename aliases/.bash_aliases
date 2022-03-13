@@ -45,6 +45,7 @@ alias dn='docker network'
 alias dln='docker network ls'
 alias din='docker network inspect'
 alias dlo='docker logs'
+alias dlf='docker logs -f --tail 50'
 
 # Docker Swarm
 alias dnode='docker node'
