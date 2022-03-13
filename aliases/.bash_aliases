@@ -97,11 +97,11 @@ alias tor='cd ~/Downloads/tor && ./start-tor-browser.desktop && cd -'
 alias code='code-insiders'
 
 # Other Aliases
-alias gg='cd /server'         # Basedir
-alias ggs='cd /server/sites'  # Sites
-alias ggb='cd /server/backup' # Backup
-alias ggp='cd /server/proxy'  # Proxy
-alias ggd='cd /server/dev'    # Development
+alias gg='cd ~/server'         # Basedir
+alias ggs='cd ~/server/sites'  # Sites
+alias ggb='cd ~/server/backup' # Backup
+alias ggp='cd ~/server/proxy'  # Proxy
+alias ggd='cd ~/server/dev'    # Development
 
 # Sail
 alias sail='[ -f sail ] && $PWD/sail || bash vendor/bin/sail'
