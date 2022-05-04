@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SERVER_AUTOMATION_BASE_FOLDER=/home/ubuntu/server/server-automation
+SERVER_AUTOMATION_BASE_FOLDER="/home/$USER/server/server-automation"
 
 # Create server-automation base path if it does not exists
 [[ ! -d "$SERVER_AUTOMATION_BASE_FOLDER" ]] && mkdir -p $SERVER_AUTOMATION_BASE_FOLDER && echo "The server-automation base path '$SERVER_AUTOMATION_BASE_FOLDER' was created sucessfuly!"
