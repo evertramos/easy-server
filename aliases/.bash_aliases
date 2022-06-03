@@ -86,7 +86,22 @@ alias kdc='kubectl config delete-context'
 # Kubernetes actions
 alias kaf='kubectl apply -f'
 alias kep='kubectl exec -it $(kubectl get pod -o jsonpath="{.items[0].metadata.name}") -- bash'
+alias kep2='kubectl exec -it $(kubectl get pod -o jsonpath="{.items[1].metadata.name}") -- bash'
+alias kep3='kubectl exec -it $(kubectl get pod -o jsonpath="{.items[2].metadata.name}") -- bash'
+alias kep4='kubectl exec -it $(kubectl get pod -o jsonpath="{.items[3].metadata.name}") -- bash'
+alias kep5='kubectl exec -it $(kubectl get pod -o jsonpath="{.items[4].metadata.name}") -- bash'
+alias kep6='kubectl exec -it $(kubectl get pod -o jsonpath="{.items[5].metadata.name}") -- bash'
+alias kep7='kubectl exec -it $(kubectl get pod -o jsonpath="{.items[6].metadata.name}") -- bash'
+alias kep8='kubectl exec -it $(kubectl get pod -o jsonpath="{.items[7].metadata.name}") -- bash'
+alias kep9='kubectl exec -it $(kubectl get pod -o jsonpath="{.items[8].metadata.name}") -- bash'
+alias kep10='kubectl exec -it $(kubectl get pod -o jsonpath="{.items[9].metadata.name}") -- bash'
 alias klc='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[0].metadata.name}") -- '
+
+# Kubens
+alias kb='kubens'
+
+# Kubectx
+alias kx='kubectx'
 
 # Flutter basics
 alias f='flutter'
@@ -97,11 +112,13 @@ alias tor='cd ~/Downloads/tor && ./start-tor-browser.desktop && cd -'
 alias code='code-insiders'
 
 # Other Aliases
-alias gg='cd ~/server'         # Basedir
-alias ggs='cd ~/server/sites'  # Sites
-alias ggb='cd ~/server/backup' # Backup
-alias ggp='cd ~/server/proxy'  # Proxy
-alias ggd='cd ~/server/dev'    # Development
+ALIAS_HOME_BASE_PATH="~/server"
+
+alias gg='cd $ALIAS_HOME_BASE_PATH'         # Basedir
+alias ggs='cd $ALIAS_HOME_BASE_PATH/sites'  # Sites
+alias ggb='cd $ALIAS_HOME_BASE_PATH/backup' # Backup
+alias ggp='cd $ALIAS_HOME_BASE_PATH/proxy'  # Proxy
+alias ggd='cd $ALIAS_HOME_BASE_PATH/dev'    # Development
 
 # Sail
 alias sail='[ -f sail ] && $PWD/sail || bash vendor/bin/sail'
