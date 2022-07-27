@@ -122,7 +122,10 @@ alias ggp='cd $ALIAS_HOME_BASE_PATH/proxy'  # Proxy
 alias ggd='cd $ALIAS_HOME_BASE_PATH/dev'    # Development
 
 # Sail
-alias sail='[ -f sail ] && $PWD/sail || bash vendor/bin/sail'
+alias sail='[ -f sail ] && bash sail || bash vendor/bin/sail'
 
 # Rust
 alias c='cargo'
+
+# Auth
+alias auth='auth --cluster $(kubectx -c | cut -f2 -d"@")'
