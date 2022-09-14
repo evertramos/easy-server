@@ -78,6 +78,13 @@ alias kgn='kubectl get nodes'
 alias kgd='kubectl get deployments'
 alias kgss='kubectl get secrets'
 
+alias kd='kubectl describe'
+alias kdp='kubectl describe pods'
+alias kds='kubectl describe service'
+alias kdn='kubectl describe nodes'
+alias kdd='kubectl describe deployments'
+alias kdss='kubectl describe secrets'
+
 # Kubernetes config
 alias kgc='kubectl config get-contexts'
 alias ksc='kubectl config set-context'
@@ -129,3 +136,8 @@ alias c='cargo'
 
 # Auth
 alias auth='auth --cluster $(kubectx -c | cut -f2 -d"@")'
+
+# Display
+alias uvb="xrandr --output $(xrandr | grep " connected" | cut -f1 -d " ") --brightness $1"
+alias uvbn="xrandr --output $(xrandr | grep " connected" | cut -f1 -d " ") --gamma 1.0:0.7:0.6 --brightness $1"
+
