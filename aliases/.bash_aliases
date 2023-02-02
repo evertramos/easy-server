@@ -104,6 +104,15 @@ alias kep8='kubectl exec -it $(kubectl get pod -o jsonpath="{.items[7].metadata.
 alias kep9='kubectl exec -it $(kubectl get pod -o jsonpath="{.items[8].metadata.name}") -- bash'
 alias kep10='kubectl exec -it $(kubectl get pod -o jsonpath="{.items[9].metadata.name}") -- bash'
 alias klc='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[0].metadata.name}") -- '
+alias klc2='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[1].metadata.name}") -- '
+alias klc3='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[2].metadata.name}") -- '
+alias klc4='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[3].metadata.name}") -- '
+alias klc5='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[4].metadata.name}") -- '
+alias klc6='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[5].metadata.name}") -- '
+alias klc7='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[6].metadata.name}") -- '
+alias klc8='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[7].metadata.name}") -- '
+alias klc9='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[8].metadata.name}") -- '
+alias klc10='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[9].metadata.name}") -- '
 
 # Kubens
 alias kb='kubens'
