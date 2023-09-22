@@ -129,7 +129,7 @@ alias tor='cd ~/Downloads/tor && ./start-tor-browser.desktop && cd -'
 alias code='code-insiders'
 
 # Other Aliases
-ALIAS_HOME_BASE_PATH="~/server"
+ALIAS_HOME_BASE_PATH="$HOME/server"
 
 alias gg='cd $ALIAS_HOME_BASE_PATH'         # Basedir
 alias ggs='cd $ALIAS_HOME_BASE_PATH/sites'  # Sites
