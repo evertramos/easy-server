@@ -78,6 +78,13 @@ alias kgn='kubectl get nodes'
 alias kgd='kubectl get deployments'
 alias kgss='kubectl get secrets'
 
+alias kd='kubectl describe'
+alias kdp='kubectl describe pods'
+alias kds='kubectl describe service'
+alias kdn='kubectl describe nodes'
+alias kdd='kubectl describe deployments'
+alias kdss='kubectl describe secrets'
+
 # Kubernetes config
 alias kgc='kubectl config get-contexts'
 alias ksc='kubectl config set-context'
@@ -115,6 +122,11 @@ alias klc3='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[2]
 alias klc4='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[3].metadata.name}") -- '
 alias klc5='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[4].metadata.name}") -- '
 alias klc6='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[5].metadata.name}") -- '
+alias klc7='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[6].metadata.name}") -- '
+alias klc8='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[7].metadata.name}") -- '
+alias klc9='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[8].metadata.name}") -- '
+alias klc10='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[9].metadata.name}") -- '
+
 alias klcc='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[0].metadata.name}") -c eagendas-p-nginx -- '
 alias klcc1='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[0].metadata.name}") -c $1 -- '
 alias klcc2='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[1].metadata.name}") -c eagendas-p-nginx -- '
@@ -122,6 +134,10 @@ alias klcc3='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[2
 alias klcc4='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[3].metadata.name}") -c eagendas-p-nginx -- '
 alias klcc5='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[4].metadata.name}") -c eagendas-p-nginx -- '
 alias klcc6='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[5].metadata.name}") -c eagendas-p-nginx -- '
+alias klcc7='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[6].metadata.name}") -c eagendas-p-nginx -- '
+alias klcc8='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[7].metadata.name}") -c eagendas-p-nginx -- '
+alias klcc9='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[8].metadata.name}") -c eagendas-p-nginx -- '
+alias klcc10='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[9].metadata.name}") -c eagendas-p-nginx -- '
 
 # Kubens
 alias kb='kubens'
@@ -138,7 +154,7 @@ alias tor='cd ~/Downloads/tor && ./start-tor-browser.desktop && cd -'
 alias code='code-insiders'
 
 # Other Aliases
-ALIAS_HOME_BASE_PATH="~/server"
+ALIAS_HOME_BASE_PATH="$HOME/server"
 
 alias gg='cd $ALIAS_HOME_BASE_PATH'         # Basedir
 alias ggs='cd $ALIAS_HOME_BASE_PATH/sites'  # Sites
