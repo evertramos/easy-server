@@ -86,6 +86,7 @@ alias kdc='kubectl config delete-context'
 
 # Kubernetes actions
 alias kaf='kubectl apply -f'
+
 alias kep='kubectl exec -it $(kubectl get pod -o jsonpath="{.items[0].metadata.name}") -- bash'
 alias kep2='kubectl exec -it $(kubectl get pod -o jsonpath="{.items[1].metadata.name}") -- bash'
 alias kep3='kubectl exec -it $(kubectl get pod -o jsonpath="{.items[2].metadata.name}") -- bash'
@@ -96,7 +97,31 @@ alias kep7='kubectl exec -it $(kubectl get pod -o jsonpath="{.items[6].metadata.
 alias kep8='kubectl exec -it $(kubectl get pod -o jsonpath="{.items[7].metadata.name}") -- bash'
 alias kep9='kubectl exec -it $(kubectl get pod -o jsonpath="{.items[8].metadata.name}") -- bash'
 alias kep10='kubectl exec -it $(kubectl get pod -o jsonpath="{.items[9].metadata.name}") -- bash'
+
+alias kepp='kubectl exec -it $(kubectl get pod -o jsonpath="{.items[0].metadata.name}") --container eagendas-p-nginx -- bash'
+alias kepp2='kubectl exec -it $(kubectl get pod -o jsonpath="{.items[1].metadata.name}") --container eagendas-p-nginx -- bash'
+alias kepp3='kubectl exec -it $(kubectl get pod -o jsonpath="{.items[2].metadata.name}") --container eagendas-p-nginx -- bash'
+alias kepp4='kubectl exec -it $(kubectl get pod -o jsonpath="{.items[3].metadata.name}") --container eagendas-p-nginx -- bash'
+alias kepp5='kubectl exec -it $(kubectl get pod -o jsonpath="{.items[4].metadata.name}") --container eagendas-p-nginx -- bash'
+alias kepp6='kubectl exec -it $(kubectl get pod -o jsonpath="{.items[5].metadata.name}") --container eagendas-p-nginx -- bash'
+alias kepp7='kubectl exec -it $(kubectl get pod -o jsonpath="{.items[6].metadata.name}") --container eagendas-p-nginx -- bash'
+alias kepp8='kubectl exec -it $(kubectl get pod -o jsonpath="{.items[7].metadata.name}") --container eagendas-p-nginx -- bash'
+alias kepp9='kubectl exec -it $(kubectl get pod -o jsonpath="{.items[8].metadata.name}") --container eagendas-p-nginx -- bash'
+alias kepp10='kubectl exec -it $(kubectl get pod -o jsonpath="{.items[9].metadata.name}") --container eagendas-p-nginx -- bash'
+
 alias klc='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[0].metadata.name}") -- '
+alias klc2='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[1].metadata.name}") -- '
+alias klc3='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[2].metadata.name}") -- '
+alias klc4='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[3].metadata.name}") -- '
+alias klc5='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[4].metadata.name}") -- '
+alias klc6='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[5].metadata.name}") -- '
+alias klcc='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[0].metadata.name}") -c eagendas-p-nginx -- '
+alias klcc1='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[0].metadata.name}") -c $1 -- '
+alias klcc2='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[1].metadata.name}") -c eagendas-p-nginx -- '
+alias klcc3='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[2].metadata.name}") -c eagendas-p-nginx -- '
+alias klcc4='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[3].metadata.name}") -c eagendas-p-nginx -- '
+alias klcc5='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[4].metadata.name}") -c eagendas-p-nginx -- '
+alias klcc6='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[5].metadata.name}") -c eagendas-p-nginx -- '
 
 # Kubens
 alias kb='kubens'
@@ -122,7 +147,7 @@ alias ggp='cd $ALIAS_HOME_BASE_PATH/proxy'  # Proxy
 alias ggd='cd $ALIAS_HOME_BASE_PATH/dev'    # Development
 
 # Sail
-alias sail='[ -f sail ] && bash sail || bash vendor/bin/sail'
+alias sail='bash vendor/bin/sail'
 
 # Rust
 alias c='cargo'
