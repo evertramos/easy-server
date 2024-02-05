@@ -139,6 +139,10 @@ alias klcc8='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[7
 alias klcc9='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[8].metadata.name}") -c eagendas-p-nginx -- '
 alias klcc10='kubectl logs -f --tail 100 $(kubectl get pod -o jsonpath="{.items[9].metadata.name}") -c eagendas-p-nginx -- '
 
+# Scale up and down
+alias scup = 'kubectl scale --replicas=1 $(kubectl get deployment -o name)'
+alias scdown = 'kubectl scale --replicas=0 $(kubectl get deployment -o name)'
+
 # Kubens
 alias kb='kubens'
 
