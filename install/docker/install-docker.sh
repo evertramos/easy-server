@@ -20,22 +20,20 @@ sudo usermod -aG docker $USER
 # Install Docker Compose
 #---------------------------------------------------------------------------------
 
-COMPOSE_VERSION=$(curl --silent "https://api.github.com/repos/docker/compose/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-AUTO_COMPLETE_COMPOSE_VERSION=1.29.2
+# Dependencies 
+sudo apt install bash-completion
 
-# Download the latest release of docker
-sudo curl -L https://github.com/docker/compose/releases/download/$COMPOSE_VERSION/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
-
-# Apply permissions
-sudo chmod +x /usr/local/bin/docker-compose
-
-# Install command completion
-sudo curl -L https://raw.githubusercontent.com/docker/compose/$AUTO_COMPLETE_COMPOSE_VERSION/contrib/completion/bash/docker-compose -o /etc/bash_completion.d/docker-compose
+# Add bash-completion to .bashrc
+cat <<EOT >> ~/.bashrc
+if [ -f /etc/bash_completion ]; then
+    . /etc/bash_completion
+fi
+EOT
 
 #---------------------------------------------------------------------------------
 # Check versions
 #---------------------------------------------------------------------------------
 docker version
-docker-compose version
+docker compose version
 
 exit 0
