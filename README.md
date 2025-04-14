@@ -4,6 +4,7 @@ Linux scripts to automate simple tasks in new servers!
 
 ### Requirements
 
+- git
 - apt
 - sudo
 
