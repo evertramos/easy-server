@@ -174,3 +174,4 @@ alias c='cargo'
 
 # Auth
 alias auth='auth --cluster $(kubectx -c | cut -f2 -d"@")'
+

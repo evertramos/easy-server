@@ -2,7 +2,7 @@ set tabstop=2 softtabstop=0 expandtab shiftwidth=2 smarttab
 
 syntax on
 
-filetype plugin indent on 
+" filetype plugin indent on 
 
 " Open file in the last line used in this file
 if has("autocmd")
