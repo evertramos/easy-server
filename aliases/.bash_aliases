@@ -155,7 +155,6 @@ alias fc='flutter config'
 
 # Apps
 alias tor='cd ~/Downloads/tor && ./start-tor-browser.desktop && cd -'
-alias code='code-insiders'
 
 # Other Aliases
 ALIAS_HOME_BASE_PATH="$HOME/server"
