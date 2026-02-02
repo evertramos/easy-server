@@ -20,3 +20,5 @@ setopt prompt_subst
 zstyle ':vcs_info:git:*' formats '(%F{yellow}%b%f)'
 eval "$(dircolors -b)"
 alias ls='ls --color=auto'
+
+[ -f ~/.bash_aliases ] && source ~/.bash_aliases
