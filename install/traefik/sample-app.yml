@@ -1,0 +1,9 @@
+  app:
+    image: your-app-image:latest
+    container_name: app
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.app.rule=Host(`app.seu-dominio.com`)"
+      - "traefik.http.routers.app.entrypoints=websecure"
+      - "traefik.http.routers.app.tls.certresolver=bunny"

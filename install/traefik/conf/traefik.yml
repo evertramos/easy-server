@@ -1,0 +1,90 @@
+# Traefik v3 - Production Configuration
+
+api:
+  dashboard: true
+  insecure: false
+
+entryPoints:
+  web:
+    address: ":80"
+    forwardedHeaders:
+      trustedIPs:
+        - "127.0.0.1/32"
+        - "10.0.0.0/8"
+        - "172.16.0.0/12"
+        - "192.168.0.0/16"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+  websecure:
+    address: ":443"
+    forwardedHeaders:
+      trustedIPs:
+        - "127.0.0.1/32"
+        - "10.0.0.0/8"
+        - "172.16.0.0/12"
+        - "192.168.0.0/16"
+    http:
+      tls: {} # Add default resolver if needed
+
+providers:
+  docker:
+    exposedByDefault: false
+    network: proxy
+  file:
+    filename: /etc/traefik/dynamic.yml
+    watch: true
+
+# Logging
+log:
+  level: INFO
+  format: json
+
+accessLog:
+  format: json
+  bufferingSize: 100
+  filePath: "/var/log/traefik/access.log"
+  filters:
+    statusCodes:
+      - "400-599"
+
+# TLS Configuration
+serversTransport:
+  insecureSkipVerify: false
+
+# ACME - Certificate Resolvers
+certificatesResolvers:
+  bunny:
+    acme:
+      email: "tlc@example.com"
+      storage: "/acme.json"
+      dnsChallenge:
+        provider: bunny
+        delayBeforeCheck: 0
+
+  cloudflare:
+    acme:
+      email: "tlc@example.com"
+      storage: "/acme.json"
+      dnsChallenge:
+        provider: cloudflare
+        delayBeforeCheck: 0
+        resolvers:
+          - "1.1.1.1:53"
+          - "1.0.0.1:53"
+  http01:
+    acme:
+      email: "tlc@example.com"
+      storage: "/acme.json"
+      httpChallenge:
+        entryPoint: web
+
+# [FUTURE] Observability
+# metrics:
+#   prometheus:
+#     entryPoint: websecure
+# tracing:
+#   otlp: {}
