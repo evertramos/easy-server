@@ -82,6 +82,8 @@ copy_files() {
 
     # Alertmanager
     cp "${SCRIPT_DIR}/alertmanager/alertmanager.yml" "${BASE_DIR}/alertmanager/"
+    cp "${SCRIPT_DIR}/alertmanager/docker-entrypoint.sh" "${BASE_DIR}/alertmanager/"
+    chmod +x "${BASE_DIR}/alertmanager/docker-entrypoint.sh"
 
     # Loki
     cp "${SCRIPT_DIR}/loki/loki.yml" "${BASE_DIR}/loki/"

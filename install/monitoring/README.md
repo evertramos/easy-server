@@ -130,85 +130,55 @@ sudo docker compose up -d
 
 ## Configuring Notifications
 
-### Slack
+All notification settings are configured via `.env` file and `alertmanager/alertmanager.yml`.
 
-Edit `alertmanager/alertmanager.yml`:
-
-```yaml
-receivers:
-  - name: "critical"
-    slack_configs:
-      - api_url: 'https://hooks.slack.com/services/xxx/yyy/zzz'
-        channel: '#alerts'
-        send_resolved: true
-```
-
-### Email
-
-Edit `alertmanager/alertmanager.yml`:
-
-```yaml
-global:
-  smtp_smarthost: 'smtp.example.com:587'
-  smtp_from: 'alertmanager@example.com'
-  smtp_auth_username: 'user'
-  smtp_auth_password: 'password'
-
-receivers:
-  - name: "critical"
-    email_configs:
-      - to: 'admin@example.com'
-        send_resolved: true
-```
+1. Set credentials in `.env`
+2. Uncomment the receiver in `alertmanager/alertmanager.yml`
+3. Restart: `docker compose restart alertmanager`
 
 ### Telegram
-
-Telegram notifications are built-in to Alertmanager (no external webhook needed).
-
-#### 1. Create a bot
 
 1. Open Telegram and search for `@BotFather`
 2. Send `/newbot` and follow the prompts
 3. Save the **API token** (looks like `123456789:ABCdefGHIjklMNOpqrsTUVwxyz`)
+4. Start a chat with your new bot (send any message)
+5. Get your Chat ID: `https://api.telegram.org/bot<TOKEN>/getUpdates`
+6. Configure `.env`:
 
-#### 2. Get your Chat ID
+```bash
+TELEGRAM_BOT_TOKEN=123456789:ABCdefGHIjklMNOpqrsTUVwxyz
+TELEGRAM_CHAT_ID=123456789
+```
 
-1. Start a chat with your new bot (send any message)
-2. Visit: `https://api.telegram.org/bot<YOUR_TOKEN>/getUpdates`
-3. Find `"chat":{"id":123456789}` in the response
+7. Uncomment `telegram_configs` in `alertmanager/alertmanager.yml`
 
 For group chats, add the bot to the group first, then check getUpdates.
 
-#### 3. Configure Alertmanager
+### Slack
 
-Edit `alertmanager/alertmanager.yml`:
-
-```yaml
-receivers:
-  - name: "critical"
-    telegram_configs:
-      - bot_token: '123456789:ABCdefGHIjklMNOpqrsTUVwxyz'
-        chat_id: 123456789
-        parse_mode: 'HTML'
-        message: |
-          🚨 <b>{{ .Status | toUpper }}</b>
-          <b>Alert:</b> {{ .CommonAnnotations.summary }}
-          <b>Description:</b> {{ .CommonAnnotations.description }}
-          <b>Severity:</b> {{ .CommonLabels.severity }}
-        send_resolved: true
-```
-
-#### Message formatting options
-
-- `parse_mode`: `HTML` or `Markdown`
-- Emojis: 🚨 critical, ⚠️ warning, ✅ resolved
-- HTML tags: `<b>bold</b>`, `<i>italic</i>`, `<code>code</code>`
-
-#### 4. Restart Alertmanager
+1. Create a Slack Webhook at https://api.slack.com/messaging/webhooks
+2. Configure `.env`:
 
 ```bash
-docker compose restart alertmanager
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/xxx/yyy/zzz
+SLACK_CHANNEL=#alerts
 ```
+
+3. Uncomment `slack_configs` in `alertmanager/alertmanager.yml`
+
+### Email
+
+Configure `.env`:
+
+```bash
+SMTP_SMARTHOST=smtp.example.com:587
+SMTP_FROM=alertmanager@example.com
+SMTP_AUTH_USERNAME=user
+SMTP_AUTH_PASSWORD=password
+ALERT_EMAIL_TO=admin@example.com
+```
+
+Uncomment both `global` SMTP settings and `email_configs` in `alertmanager/alertmanager.yml`.
 
 ## Adding Custom Dashboards
 

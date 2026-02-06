@@ -2,14 +2,16 @@
 #
 # Configure notification receivers (Slack, email, Telegram, etc.)
 #
+# This file supports environment variable substitution via envsubst.
+# Variables like ${TELEGRAM_BOT_TOKEN} are replaced at container startup.
 
 global:
   resolve_timeout: 5m
   # Uncomment for email notifications:
-  # smtp_smarthost: 'smtp.example.com:587'
-  # smtp_from: 'alertmanager@example.com'
-  # smtp_auth_username: 'user'
-  # smtp_auth_password: 'password'
+  # smtp_smarthost: '${SMTP_SMARTHOST}'
+  # smtp_from: '${SMTP_FROM}'
+  # smtp_auth_username: '${SMTP_AUTH_USERNAME}'
+  # smtp_auth_password: '${SMTP_AUTH_PASSWORD}'
 
 # Route tree
 route:
@@ -43,21 +45,21 @@ receivers:
   - name: "critical"
     # Uncomment and configure for Slack notifications:
     # slack_configs:
-    #   - api_url: 'https://hooks.slack.com/services/xxx/yyy/zzz'
-    #     channel: '#alerts-critical'
+    #   - api_url: '${SLACK_WEBHOOK_URL}'
+    #     channel: '${SLACK_CHANNEL}'
     #     title: '{{ .Status | toUpper }}: {{ .CommonAnnotations.summary }}'
     #     text: '{{ .CommonAnnotations.description }}'
     #     send_resolved: true
 
     # Uncomment for email notifications:
     # email_configs:
-    #   - to: 'admin@example.com'
+    #   - to: '${ALERT_EMAIL_TO}'
     #     send_resolved: true
 
     # Uncomment for Telegram notifications:
     # telegram_configs:
-    #   - bot_token: 'YOUR_BOT_TOKEN'
-    #     chat_id: YOUR_CHAT_ID
+    #   - bot_token: '${TELEGRAM_BOT_TOKEN}'
+    #     chat_id: ${TELEGRAM_CHAT_ID}
     #     parse_mode: 'HTML'
     #     message: |
     #       🚨 <b>{{ .Status | toUpper }}</b>
@@ -69,16 +71,16 @@ receivers:
   - name: "warning"
     # Uncomment and configure for Slack notifications:
     # slack_configs:
-    #   - api_url: 'https://hooks.slack.com/services/xxx/yyy/zzz'
-    #     channel: '#alerts'
+    #   - api_url: '${SLACK_WEBHOOK_URL}'
+    #     channel: '${SLACK_CHANNEL}'
     #     title: '{{ .Status | toUpper }}: {{ .CommonAnnotations.summary }}'
     #     text: '{{ .CommonAnnotations.description }}'
     #     send_resolved: true
 
     # Uncomment for Telegram notifications:
     # telegram_configs:
-    #   - bot_token: 'YOUR_BOT_TOKEN'
-    #     chat_id: YOUR_CHAT_ID
+    #   - bot_token: '${TELEGRAM_BOT_TOKEN}'
+    #     chat_id: ${TELEGRAM_CHAT_ID}
     #     parse_mode: 'HTML'
     #     message: |
     #       ⚠️ <b>{{ .Status | toUpper }}</b>
