@@ -1,0 +1,104 @@
+# Prometheus Alert Rules
+#
+# Production alerts for Traefik and infrastructure
+#
+
+groups:
+  - name: traefik
+    rules:
+      # High error rate
+      - alert: TraefikHighErrorRate
+        expr: |
+          sum(rate(traefik_service_requests_total{code=~"5.."}[5m]))
+          / sum(rate(traefik_service_requests_total[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} over the last 5 minutes"
+
+      # High latency
+      - alert: TraefikHighLatency
+        expr: |
+          histogram_quantile(0.95, sum(rate(traefik_service_request_duration_seconds_bucket[5m])) by (le, service)) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High latency on {{ $labels.service }}"
+          description: "P95 latency is {{ $value | humanizeDuration }}"
+
+      # Service down
+      - alert: TraefikServiceDown
+        expr: traefik_service_server_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.service }} is down"
+          description: "Backend server is not responding"
+
+      # Too many open connections
+      - alert: TraefikTooManyConnections
+        expr: traefik_entrypoint_open_connections > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High number of open connections"
+          description: "{{ $value }} connections on {{ $labels.entrypoint }}"
+
+  - name: certificates
+    rules:
+      # Certificate expiring soon
+      - alert: CertificateExpiringSoon
+        expr: traefik_tls_certs_not_after - time() < 86400 * 7
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "TLS certificate expiring soon"
+          description: "Certificate for {{ $labels.cn }} expires in {{ $value | humanizeDuration }}"
+
+      # Certificate expired
+      - alert: CertificateExpired
+        expr: traefik_tls_certs_not_after - time() < 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "TLS certificate expired"
+          description: "Certificate for {{ $labels.cn }} has expired"
+
+  - name: infrastructure
+    rules:
+      # Container down
+      - alert: ContainerDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Container {{ $labels.job }} is down"
+          description: "Target {{ $labels.instance }} is unreachable"
+
+      # High memory usage (if node-exporter is installed)
+      # - alert: HighMemoryUsage
+      #   expr: (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) > 0.9
+      #   for: 5m
+      #   labels:
+      #     severity: warning
+      #   annotations:
+      #     summary: "High memory usage"
+      #     description: "Memory usage is {{ $value | humanizePercentage }}"
+
+      # High disk usage (if node-exporter is installed)
+      # - alert: HighDiskUsage
+      #   expr: (1 - node_filesystem_avail_bytes{fstype!="tmpfs"} / node_filesystem_size_bytes) > 0.85
+      #   for: 5m
+      #   labels:
+      #     severity: warning
+      #   annotations:
+      #     summary: "High disk usage on {{ $labels.mountpoint }}"
+      #     description: "Disk usage is {{ $value | humanizePercentage }}"

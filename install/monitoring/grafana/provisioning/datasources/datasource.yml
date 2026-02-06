@@ -1,0 +1,31 @@
+# Grafana Datasource Provisioning
+#
+# Auto-configure Prometheus and Loki datasources
+#
+
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      timeInterval: "15s"
+      httpMethod: POST
+
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    editable: false
+    jsonData:
+      maxLines: 1000
+      derivedFields:
+        # Link to container logs from Traefik access logs
+        - datasourceUid: loki
+          matcherRegex: 'container_id=(\w+)'
+          name: Container
+          url: '/explore?orgId=1&left=["now-1h","now","Loki",{"expr":"{container_id=\"${__value.raw}\"}"}]'

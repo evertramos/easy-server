@@ -1,0 +1,73 @@
+# Alertmanager Configuration
+#
+# Configure notification receivers (Slack, email, etc.)
+#
+
+global:
+  resolve_timeout: 5m
+  # Uncomment for email notifications:
+  # smtp_smarthost: 'smtp.example.com:587'
+  # smtp_from: 'alertmanager@example.com'
+  # smtp_auth_username: 'user'
+  # smtp_auth_password: 'password'
+
+# Route tree
+route:
+  group_by: ["alertname", "severity"]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  receiver: "default"
+
+  routes:
+    # Critical alerts - immediate notification
+    - match:
+        severity: critical
+      receiver: "critical"
+      group_wait: 10s
+      repeat_interval: 1h
+
+    # Warning alerts - batch and notify
+    - match:
+        severity: warning
+      receiver: "warning"
+      group_wait: 5m
+      repeat_interval: 12h
+
+# Receivers
+receivers:
+  - name: "default"
+    # Default receiver - logs only (no external notification)
+    # Add webhook_configs, email_configs, or slack_configs as needed
+
+  - name: "critical"
+    # Uncomment and configure for Slack notifications:
+    # slack_configs:
+    #   - api_url: 'https://hooks.slack.com/services/xxx/yyy/zzz'
+    #     channel: '#alerts-critical'
+    #     title: '{{ .Status | toUpper }}: {{ .CommonAnnotations.summary }}'
+    #     text: '{{ .CommonAnnotations.description }}'
+    #     send_resolved: true
+
+    # Uncomment for email notifications:
+    # email_configs:
+    #   - to: 'admin@example.com'
+    #     send_resolved: true
+
+  - name: "warning"
+    # Uncomment and configure for Slack notifications:
+    # slack_configs:
+    #   - api_url: 'https://hooks.slack.com/services/xxx/yyy/zzz'
+    #     channel: '#alerts'
+    #     title: '{{ .Status | toUpper }}: {{ .CommonAnnotations.summary }}'
+    #     text: '{{ .CommonAnnotations.description }}'
+    #     send_resolved: true
+
+# Inhibition rules - prevent duplicate alerts
+inhibit_rules:
+  # If critical is firing, suppress warning for same alertname
+  - source_match:
+      severity: "critical"
+    target_match:
+      severity: "warning"
+    equal: ["alertname"]

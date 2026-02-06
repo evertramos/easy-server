@@ -16,6 +16,12 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     labels:
       # Dashboard protected with Basic Auth and IP Whitelist
       - "traefik.enable=true"

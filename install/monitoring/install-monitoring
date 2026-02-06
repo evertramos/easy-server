@@ -1,0 +1,145 @@
+#!/usr/bin/env bash
+#
+# install-monitoring - Install Prometheus + Grafana + Loki + Alertmanager stack
+#
+# Usage:
+#   ./install-monitoring [BASE_DIR]
+#
+# Arguments:
+#   BASE_DIR    Installation directory (default: /opt/monitoring)
+#
+set -euo pipefail
+
+# Configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BASE_DIR="${1:-/opt/monitoring}"
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+info()  { echo -e "${GREEN}[INFO]${NC} $*"; }
+warn()  { echo -e "${YELLOW}[WARN]${NC} $*"; }
+error() { echo -e "${RED}[ERROR]${NC} $*" >&2; exit 1; }
+
+# Check prerequisites
+check_prerequisites() {
+    info "Checking prerequisites..."
+
+    if ! command -v docker &>/dev/null; then
+        error "Docker is not installed"
+    fi
+
+    if ! docker compose version &>/dev/null; then
+        error "Docker Compose v2 is not installed"
+    fi
+
+    # Check if Traefik is running
+    if ! docker ps --format '{{.Names}}' | grep -q '^traefik$'; then
+        warn "Traefik container not running. Make sure to start it before monitoring."
+    fi
+
+    # Check if proxy network exists
+    if ! docker network ls --format '{{.Name}}' | grep -q '^proxy$'; then
+        warn "Network 'proxy' not found. It will be created when Traefik starts."
+    fi
+}
+
+# Create directory structure
+create_directories() {
+    info "Creating directory structure at ${BASE_DIR}..."
+
+    sudo mkdir -p "${BASE_DIR}"/{prometheus,grafana/provisioning/{dashboards,datasources},alertmanager,loki,promtail}
+}
+
+# Copy files
+copy_files() {
+    info "Copying configuration files..."
+
+    # Main files
+    sudo cp "${SCRIPT_DIR}/docker-compose.yml" "${BASE_DIR}/"
+    sudo cp "${SCRIPT_DIR}/.env.example" "${BASE_DIR}/"
+
+    # Prometheus
+    sudo cp "${SCRIPT_DIR}/prometheus/prometheus.yml" "${BASE_DIR}/prometheus/"
+    sudo cp "${SCRIPT_DIR}/prometheus/alerts.yml" "${BASE_DIR}/prometheus/"
+
+    # Grafana
+    sudo cp "${SCRIPT_DIR}/grafana/provisioning/datasources/datasource.yml" "${BASE_DIR}/grafana/provisioning/datasources/"
+    sudo cp "${SCRIPT_DIR}/grafana/provisioning/dashboards/dashboard.yml" "${BASE_DIR}/grafana/provisioning/dashboards/"
+    sudo cp "${SCRIPT_DIR}/grafana/provisioning/dashboards/traefik.json" "${BASE_DIR}/grafana/provisioning/dashboards/"
+
+    # Alertmanager
+    sudo cp "${SCRIPT_DIR}/alertmanager/alertmanager.yml" "${BASE_DIR}/alertmanager/"
+
+    # Loki
+    sudo cp "${SCRIPT_DIR}/loki/loki.yml" "${BASE_DIR}/loki/"
+
+    # Promtail
+    sudo cp "${SCRIPT_DIR}/promtail/promtail.yml" "${BASE_DIR}/promtail/"
+}
+
+# Set permissions
+set_permissions() {
+    info "Setting permissions..."
+
+    # Grafana needs specific UID
+    sudo chown -R 472:472 "${BASE_DIR}/grafana" 2>/dev/null || true
+}
+
+# Create .env if not exists
+create_env() {
+    if [[ ! -f "${BASE_DIR}/.env" ]]; then
+        info "Creating .env file..."
+        sudo cp "${BASE_DIR}/.env.example" "${BASE_DIR}/.env"
+        warn "Edit ${BASE_DIR}/.env to configure domains and credentials"
+    else
+        info ".env file already exists, skipping"
+    fi
+}
+
+# Print next steps
+print_next_steps() {
+    echo ""
+    echo -e "${GREEN}Installation complete!${NC}"
+    echo ""
+    echo "Next steps:"
+    echo ""
+    echo "1. Configure environment variables:"
+    echo "   sudo vi ${BASE_DIR}/.env"
+    echo ""
+    echo "2. Generate password hashes for Basic Auth:"
+    echo "   htpasswd -nbB admin 'yourpassword' | sed 's/\$/\$\$/g'"
+    echo ""
+    echo "3. Enable metrics in Traefik (traefik.yml):"
+    echo "   metrics:"
+    echo "     prometheus:"
+    echo "       addEntryPointsLabels: true"
+    echo "       addRoutersLabels: true"
+    echo "       addServicesLabels: true"
+    echo ""
+    echo "4. Start the monitoring stack:"
+    echo "   cd ${BASE_DIR} && sudo docker compose up -d"
+    echo ""
+    echo "5. Access Grafana:"
+    echo "   https://\${GRAFANA_DOMAIN}"
+    echo ""
+}
+
+# Main
+main() {
+    echo ""
+    echo "=== Monitoring Stack Installation (Prometheus + Grafana + Loki) ==="
+    echo ""
+
+    check_prerequisites
+    create_directories
+    copy_files
+    set_permissions
+    create_env
+    print_next_steps
+}
+
+main

@@ -1,0 +1,52 @@
+# Prometheus Configuration
+#
+# Scrape configs for Traefik and other services
+#
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: "easy-server"
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
+# Load alert rules
+rule_files:
+  - /etc/prometheus/alerts.yml
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # Traefik metrics
+  - job_name: "traefik"
+    static_configs:
+      - targets: ["traefik:8080"]
+    metrics_path: /metrics
+
+  # Node Exporter (if installed)
+  # - job_name: "node"
+  #   static_configs:
+  #     - targets: ["node-exporter:9100"]
+
+  # Docker containers with prometheus labels
+  # Uncomment to auto-discover containers with label prometheus.scrape=true
+  # - job_name: "docker"
+  #   docker_sd_configs:
+  #     - host: unix:///var/run/docker.sock
+  #   relabel_configs:
+  #     - source_labels: [__meta_docker_container_label_prometheus_scrape]
+  #       regex: "true"
+  #       action: keep
+  #     - source_labels: [__meta_docker_container_name]
+  #       target_label: container
+  #       regex: "/(.+)"

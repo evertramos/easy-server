@@ -1,0 +1,21 @@
+# Whoami Test Container
+#
+# Temporary container for testing Traefik routing and TLS
+# Managed by: ./bin/whoami
+#
+services:
+  whoami:
+    image: traefik/whoami
+    container_name: whoami-test
+    restart: "no"
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami-test.rule=Host(`${WHOAMI_DOMAIN}`)"
+      - "traefik.http.routers.whoami-test.entrypoints=websecure"
+      - "traefik.http.routers.whoami-test.tls.certresolver=${CERT_RESOLVER}"
+
+networks:
+  proxy:
+    external: true

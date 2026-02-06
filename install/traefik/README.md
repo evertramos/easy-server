@@ -24,7 +24,8 @@ traefik/
 │   ├── acme.json        # ACME certificates (chmod 600)
 │   └── logs/            # Access logs
 ├── bin/
-│   └── gen-password     # Generate htpasswd hash
+│   ├── gen-password     # Generate htpasswd hash
+│   └── whoami           # Test Traefik routing
 ├── docker-compose.yml
 ├── .env.example
 └── install-traefik      # Installation script
@@ -115,6 +116,7 @@ labels:
 |------|------|-------------|
 | `web` | 80 | HTTP (redirects to HTTPS) |
 | `websecure` | 443 | HTTPS |
+| `metrics` | 8080 | Prometheus metrics (internal only) |
 
 ## Adding Services
 
@@ -169,6 +171,39 @@ accessLog:
     statusCodes:
       - "200-599"
 ```
+
+## Testing with Whoami
+
+Use the whoami script to validate Traefik routing and TLS:
+
+```bash
+# Configure the test domain
+cp bin/whoami.env.example bin/whoami.env
+vi bin/whoami.env
+
+# Start the test container
+./bin/whoami up
+
+# Test the endpoint
+./bin/whoami test
+
+# View logs
+./bin/whoami logs
+
+# Clean up when done
+./bin/whoami down
+```
+
+The whoami container returns request details (headers, IP, hostname) - useful for validating:
+- TLS certificate issuance
+- X-Forwarded-For headers from Cloudflare
+- Routing rules
+
+## Prometheus Metrics
+
+Metrics are exposed on the internal `metrics` entrypoint (`:8080`) and can be scraped by Prometheus at `http://traefik:8080/metrics`.
+
+For a complete monitoring setup with Prometheus, Grafana, and Alertmanager, see `../monitoring/`.
 
 ## Troubleshooting
 
