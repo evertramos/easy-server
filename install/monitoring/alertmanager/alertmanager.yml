@@ -1,6 +1,6 @@
 # Alertmanager Configuration
 #
-# Configure notification receivers (Slack, email, etc.)
+# Configure notification receivers (Slack, email, Telegram, etc.)
 #
 
 global:
@@ -54,6 +54,18 @@ receivers:
     #   - to: 'admin@example.com'
     #     send_resolved: true
 
+    # Uncomment for Telegram notifications:
+    # telegram_configs:
+    #   - bot_token: 'YOUR_BOT_TOKEN'
+    #     chat_id: YOUR_CHAT_ID
+    #     parse_mode: 'HTML'
+    #     message: |
+    #       🚨 <b>{{ .Status | toUpper }}</b>
+    #       <b>Alert:</b> {{ .CommonAnnotations.summary }}
+    #       <b>Description:</b> {{ .CommonAnnotations.description }}
+    #       <b>Severity:</b> {{ .CommonLabels.severity }}
+    #     send_resolved: true
+
   - name: "warning"
     # Uncomment and configure for Slack notifications:
     # slack_configs:
@@ -61,6 +73,17 @@ receivers:
     #     channel: '#alerts'
     #     title: '{{ .Status | toUpper }}: {{ .CommonAnnotations.summary }}'
     #     text: '{{ .CommonAnnotations.description }}'
+    #     send_resolved: true
+
+    # Uncomment for Telegram notifications:
+    # telegram_configs:
+    #   - bot_token: 'YOUR_BOT_TOKEN'
+    #     chat_id: YOUR_CHAT_ID
+    #     parse_mode: 'HTML'
+    #     message: |
+    #       ⚠️ <b>{{ .Status | toUpper }}</b>
+    #       <b>Alert:</b> {{ .CommonAnnotations.summary }}
+    #       <b>Description:</b> {{ .CommonAnnotations.description }}
     #     send_resolved: true
 
 # Inhibition rules - prevent duplicate alerts

@@ -8,7 +8,7 @@ Production-ready monitoring with Prometheus, Grafana, Loki, and Alertmanager. In
 - **Loki** for log aggregation (like Prometheus, but for logs)
 - **Promtail** for collecting Docker container logs
 - **Grafana** with pre-configured dashboards
-- **Alertmanager** for notifications (Slack, email)
+- **Alertmanager** for notifications (Slack, Telegram, email)
 - TLS via Traefik (Let's Encrypt)
 - Basic Auth protection
 - Cloudflare Tunnel support
@@ -159,6 +159,55 @@ receivers:
     email_configs:
       - to: 'admin@example.com'
         send_resolved: true
+```
+
+### Telegram
+
+Telegram notifications are built-in to Alertmanager (no external webhook needed).
+
+#### 1. Create a bot
+
+1. Open Telegram and search for `@BotFather`
+2. Send `/newbot` and follow the prompts
+3. Save the **API token** (looks like `123456789:ABCdefGHIjklMNOpqrsTUVwxyz`)
+
+#### 2. Get your Chat ID
+
+1. Start a chat with your new bot (send any message)
+2. Visit: `https://api.telegram.org/bot<YOUR_TOKEN>/getUpdates`
+3. Find `"chat":{"id":123456789}` in the response
+
+For group chats, add the bot to the group first, then check getUpdates.
+
+#### 3. Configure Alertmanager
+
+Edit `alertmanager/alertmanager.yml`:
+
+```yaml
+receivers:
+  - name: "critical"
+    telegram_configs:
+      - bot_token: '123456789:ABCdefGHIjklMNOpqrsTUVwxyz'
+        chat_id: 123456789
+        parse_mode: 'HTML'
+        message: |
+          🚨 <b>{{ .Status | toUpper }}</b>
+          <b>Alert:</b> {{ .CommonAnnotations.summary }}
+          <b>Description:</b> {{ .CommonAnnotations.description }}
+          <b>Severity:</b> {{ .CommonLabels.severity }}
+        send_resolved: true
+```
+
+#### Message formatting options
+
+- `parse_mode`: `HTML` or `Markdown`
+- Emojis: 🚨 critical, ⚠️ warning, ✅ resolved
+- HTML tags: `<b>bold</b>`, `<i>italic</i>`, `<code>code</code>`
+
+#### 4. Restart Alertmanager
+
+```bash
+docker compose restart alertmanager
 ```
 
 ## Adding Custom Dashboards
