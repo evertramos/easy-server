@@ -59,7 +59,7 @@ check_prerequisites() {
 create_directories() {
     info "Creating directory structure..."
 
-    sudo mkdir -p "${BASE_DIR}"/{prometheus,grafana/provisioning/{dashboards,datasources},alertmanager,loki,promtail}
+    sudo mkdir -p "${BASE_DIR}"/{prometheus,grafana/provisioning/{dashboards,datasources},alertmanager,loki,promtail,bin}
     sudo chown -R "$CURRENT_USER:$CURRENT_USER" "${BASE_DIR}"
 }
 
@@ -91,6 +91,10 @@ copy_files() {
 
     # Promtail
     cp "${SCRIPT_DIR}/promtail/promtail.yml" "${BASE_DIR}/promtail/"
+
+    # Bin scripts
+    cp "${SCRIPT_DIR}/bin/"* "${BASE_DIR}/bin/" 2>/dev/null || true
+    chmod +x "${BASE_DIR}/bin/"* 2>/dev/null || true
 }
 
 # Set permissions
@@ -130,6 +134,9 @@ print_next_steps() {
     echo ""
     echo "4. Access Grafana:"
     echo "   https://\${GRAFANA_DOMAIN}"
+    echo ""
+    echo "Utility scripts available at: ${BASE_DIR}/bin/"
+    echo "  - update-dashboards: Update Grafana dashboards from source"
     echo ""
 }
 

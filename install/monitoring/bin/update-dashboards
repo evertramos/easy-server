@@ -1,0 +1,81 @@
+#!/bin/bash
+#
+# Update Grafana dashboards on production server
+#
+# Usage: ./update-dashboards [MONITORING_PATH]
+#
+
+set -e
+
+# Default monitoring path (can be overridden by argument or env var)
+MONITORING_PATH="${1:-${MONITORING_PATH:-/opt/monitoring}}"
+
+# Source directory (where this script is located)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# Dashboard source and destination
+SRC_DIR="${SCRIPT_DIR}/grafana/provisioning/dashboards"
+DEST_DIR="${MONITORING_PATH}/grafana/provisioning/dashboards"
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+echo "Updating Grafana dashboards..."
+echo "  Source: ${SRC_DIR}"
+echo "  Destination: ${DEST_DIR}"
+echo ""
+
+# Check source directory
+if [ ! -d "$SRC_DIR" ]; then
+    echo -e "${RED}Error: Source directory not found: ${SRC_DIR}${NC}"
+    exit 1
+fi
+
+# Check destination directory
+if [ ! -d "$DEST_DIR" ]; then
+    echo -e "${RED}Error: Destination directory not found: ${DEST_DIR}${NC}"
+    echo "Make sure monitoring is installed at: ${MONITORING_PATH}"
+    exit 1
+fi
+
+# Copy dashboard files
+UPDATED=0
+for file in "${SRC_DIR}"/*.json; do
+    if [ -f "$file" ]; then
+        filename=$(basename "$file")
+        echo -n "  Copying ${filename}... "
+        cp "$file" "${DEST_DIR}/"
+        echo -e "${GREEN}OK${NC}"
+        ((UPDATED++))
+    fi
+done
+
+# Also copy dashboard.yml if exists
+if [ -f "${SRC_DIR}/dashboard.yml" ]; then
+    echo -n "  Copying dashboard.yml... "
+    cp "${SRC_DIR}/dashboard.yml" "${DEST_DIR}/"
+    echo -e "${GREEN}OK${NC}"
+    ((UPDATED++))
+fi
+
+echo ""
+echo -e "${GREEN}Updated ${UPDATED} file(s)${NC}"
+echo ""
+
+# Ask to restart Grafana
+echo -e "${YELLOW}Restart Grafana to apply changes?${NC}"
+read -p "Restart now? [y/N] " -n 1 -r
+echo ""
+
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    echo "Restarting Grafana..."
+    cd "${MONITORING_PATH}"
+    docker compose restart grafana
+    echo -e "${GREEN}Grafana restarted${NC}"
+else
+    echo "To apply changes manually, run:"
+    echo "  cd ${MONITORING_PATH} && docker compose restart grafana"
+fi

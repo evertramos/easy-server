@@ -55,7 +55,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "sum(rate(traefik_service_requests_total[5m]))",
+          "expr": "sum(rate(traefik_service_requests_total{service=~\"$service\"}[5m]))",
           "legendFormat": "Requests/s",
           "refId": "A"
         }
@@ -117,7 +117,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "sum(rate(traefik_service_requests_total{code=~\"5..\"}[5m])) / sum(rate(traefik_service_requests_total[5m]))",
+          "expr": "sum(rate(traefik_service_requests_total{code=~\"5..\"}[5m])) / sum(rate(traefik_service_requests_total{service=~\"$service\"}[5m]))",
           "legendFormat": "Error Rate",
           "refId": "A"
         }
@@ -179,7 +179,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum(rate(traefik_service_request_duration_seconds_bucket[5m])) by (le))",
+          "expr": "histogram_quantile(0.95, sum(rate(traefik_service_request_duration_seconds_bucket{service=~\"$service\"}[5m])) by (le))",
           "legendFormat": "P95 Latency",
           "refId": "A"
         }
@@ -317,7 +317,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "sum(rate(traefik_service_requests_total[5m])) by (service)",
+          "expr": "sum(rate(traefik_service_requests_total{service=~\"$service\"}[5m])) by (service)",
           "legendFormat": "{{ service }}",
           "refId": "A"
         }
@@ -447,7 +447,7 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "sum(rate(traefik_service_requests_total[5m])) by (code)",
+          "expr": "sum(rate(traefik_service_requests_total{service=~\"$service\"}[5m])) by (code)",
           "legendFormat": "{{ code }}",
           "refId": "A"
         }
@@ -531,17 +531,17 @@
       "pluginVersion": "10.0.0",
       "targets": [
         {
-          "expr": "histogram_quantile(0.50, sum(rate(traefik_service_request_duration_seconds_bucket[5m])) by (le, service))",
+          "expr": "histogram_quantile(0.50, sum(rate(traefik_service_request_duration_seconds_bucket{service=~\"$service\"}[5m])) by (le, service))",
           "legendFormat": "{{ service }} P50",
           "refId": "A"
         },
         {
-          "expr": "histogram_quantile(0.95, sum(rate(traefik_service_request_duration_seconds_bucket[5m])) by (le, service))",
+          "expr": "histogram_quantile(0.95, sum(rate(traefik_service_request_duration_seconds_bucket{service=~\"$service\"}[5m])) by (le, service))",
           "legendFormat": "{{ service }} P95",
           "refId": "B"
         },
         {
-          "expr": "histogram_quantile(0.99, sum(rate(traefik_service_request_duration_seconds_bucket[5m])) by (le, service))",
+          "expr": "histogram_quantile(0.99, sum(rate(traefik_service_request_duration_seconds_bucket{service=~\"$service\"}[5m])) by (le, service))",
           "legendFormat": "{{ service }} P99",
           "refId": "C"
         }
@@ -555,7 +555,36 @@
   "style": "dark",
   "tags": ["traefik", "proxy"],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "definition": "label_values(traefik_service_requests_total, service)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Service",
+        "multi": true,
+        "name": "service",
+        "options": [],
+        "query": {
+          "query": "label_values(traefik_service_requests_total, service)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
   },
   "time": {
     "from": "now-1h",

@@ -35,7 +35,7 @@
       },
       "targets": [
         {
-          "expr": "sum(count_over_time({container=~\".+\"}[1h]))",
+          "expr": "sum(count_over_time({container=~\"$container\"}[1h]))",
           "legendFormat": "Total Logs",
           "refId": "A"
         }
@@ -84,7 +84,7 @@
       },
       "targets": [
         {
-          "expr": "sum(count_over_time({container=~\".+\"} |~ \"(?i)error|exception|fail\"[1h]))",
+          "expr": "sum(count_over_time({container=~\"$container\"} |~ \"(?i)error|exception|fail\"[1h]))",
           "legendFormat": "Errors",
           "refId": "A"
         }
@@ -133,7 +133,7 @@
       },
       "targets": [
         {
-          "expr": "sum(count_over_time({container=~\".+\"} |~ \"(?i)warn\"[1h]))",
+          "expr": "sum(count_over_time({container=~\"$container\"} |~ \"(?i)warn\"[1h]))",
           "legendFormat": "Warnings",
           "refId": "A"
         }
@@ -167,7 +167,7 @@
       },
       "targets": [
         {
-          "expr": "count(count by (container) (count_over_time({container=~\".+\"}[5m])))",
+          "expr": "count(count by (container) (count_over_time({container=~\"$container\"}[5m])))",
           "legendFormat": "Containers",
           "refId": "A"
         }
@@ -246,7 +246,7 @@
       },
       "targets": [
         {
-          "expr": "sum by (container) (count_over_time({container=~\".+\"}[$__interval]))",
+          "expr": "sum by (container) (count_over_time({container=~\"$container\"}[$__interval]))",
           "legendFormat": "{{container}}",
           "refId": "A"
         }
@@ -278,7 +278,7 @@
       },
       "targets": [
         {
-          "expr": "{container=~\".+\"} |~ \"(?i)error|exception|fail|warn\"",
+          "expr": "{container=~\"$container\"} |~ \"(?i)error|exception|fail|warn\"",
           "legendFormat": "",
           "refId": "A"
         }
@@ -310,7 +310,7 @@
       },
       "targets": [
         {
-          "expr": "{container=~\".+\"}",
+          "expr": "{container=~\"$container\"}",
           "legendFormat": "",
           "refId": "A"
         }
@@ -324,7 +324,33 @@
   "style": "dark",
   "tags": ["loki", "logs"],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "allValue": ".+",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "definition": "label_values(container)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Container",
+        "multi": true,
+        "name": "container",
+        "options": [],
+        "query": "label_values(container)",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
   },
   "time": {
     "from": "now-1h",
