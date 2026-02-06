@@ -79,6 +79,7 @@ copy_files() {
     cp "${SCRIPT_DIR}/grafana/provisioning/datasources/datasource.yml" "${BASE_DIR}/grafana/provisioning/datasources/"
     cp "${SCRIPT_DIR}/grafana/provisioning/dashboards/dashboard.yml" "${BASE_DIR}/grafana/provisioning/dashboards/"
     cp "${SCRIPT_DIR}/grafana/provisioning/dashboards/traefik.json" "${BASE_DIR}/grafana/provisioning/dashboards/"
+    cp "${SCRIPT_DIR}/grafana/provisioning/dashboards/loki.json" "${BASE_DIR}/grafana/provisioning/dashboards/"
 
     # Alertmanager
     cp "${SCRIPT_DIR}/alertmanager/alertmanager.yml" "${BASE_DIR}/alertmanager/"
