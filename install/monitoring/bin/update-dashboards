@@ -49,7 +49,7 @@ for file in "${SRC_DIR}"/*.json; do
         echo -n "  Copying ${filename}... "
         cp "$file" "${DEST_DIR}/"
         echo -e "${GREEN}OK${NC}"
-        ((UPDATED++))
+        UPDATED=$((UPDATED + 1))
     fi
 done
 
