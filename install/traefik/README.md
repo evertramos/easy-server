@@ -22,6 +22,9 @@ traefik/
 │   └── dynamic.yml      # Dynamic TLS configuration
 ├── data/
 │   ├── acme.json        # ACME certificates (chmod 600)
+│   ├── certs/           # Cloudflare Origin Certificates
+│   │   ├── origin.pem   # Certificate (you provide)
+│   │   └── origin.key   # Private key (you provide)
 │   └── logs/            # Access logs
 ├── bin/
 │   ├── gen-password     # Generate htpasswd hash
@@ -31,6 +34,18 @@ traefik/
 └── install-traefik      # Installation script
 ```
 
+## Prerequisites
+
+```bash
+# Add your user to the docker group (logout/login required)
+sudo usermod -aG docker $USER
+
+# Verify
+docker ps
+```
+
+> **Note**: After installation, all `docker compose` commands can be run without `sudo`.
+
 ## Installation
 
 ### 1. Run the install script
@@ -39,14 +54,16 @@ traefik/
 # Install to /opt/traefik (default)
 ./install-traefik
 
-# Or specify a custom base directory
+# Or specify a custom directory
 ./install-traefik /srv
 ```
+
+The script will set proper ownership for your user.
 
 ### 2. Configure environment variables
 
 ```bash
-sudo vi /opt/traefik/.env
+vi /opt/traefik/.env
 ```
 
 Required variables:
@@ -84,15 +101,72 @@ sudo docker compose up -d
 
 ## Configuration
 
-### Certificate Resolvers
+### Certificate Resolvers (ACME)
 
-Three resolvers are pre-configured:
+Three resolvers are pre-configured for automatic certificate issuance:
 
 | Resolver | Challenge | Use Case |
 |----------|-----------|----------|
 | `cloudflare` | DNS-01 | Wildcard certs, servers behind firewall |
 | `bunny` | DNS-01 | Bunny.net DNS users |
-| `http01` | HTTP-01 | Simple setup, port 80 required |
+| `le` | HTTP-01 | Simple setup, port 80 required |
+
+### Cloudflare Origin Certificate (Recommended for Tunnel)
+
+When using Cloudflare Tunnel, Origin Certificates are the best option:
+- **15-year validity** - no renewal needed
+- **No API tokens required** - simpler setup
+- **End-to-end encryption** - between Cloudflare and your origin
+
+#### Setup
+
+1. **Create the certificate** in Cloudflare Dashboard:
+   - Go to **SSL/TLS > Origin Server**
+   - Click **Create Certificate**
+   - Choose **Let Cloudflare generate a private key**
+   - Add your domains (e.g., `*.example.com`, `example.com`)
+   - Select validity (15 years recommended)
+   - Click **Create**
+
+2. **Save the certificate files**:
+   ```bash
+   # Save the certificate (PEM format)
+   vi /opt/traefik/data/certs/origin.pem
+
+   # Save the private key
+   vi /opt/traefik/data/certs/origin.key
+
+   # Set permissions
+   chmod 600 /opt/traefik/data/certs/origin.key
+   ```
+
+3. **Enable in dynamic.yml**:
+   ```yaml
+   tls:
+     certificates:
+       - certFile: /etc/traefik/certs/origin.pem
+         keyFile: /etc/traefik/certs/origin.key
+
+     stores:
+       default:
+         defaultCertificate:
+           certFile: /etc/traefik/certs/origin.pem
+           keyFile: /etc/traefik/certs/origin.key
+   ```
+
+4. **Update service labels** (remove certresolver):
+   ```yaml
+   labels:
+     - "traefik.http.routers.myapp.tls=true"
+     # Remove: traefik.http.routers.myapp.tls.certresolver=cloudflare
+   ```
+
+5. **Restart Traefik**:
+   ```bash
+   docker compose restart traefik
+   ```
+
+> **Note**: Origin Certificates are only trusted by Cloudflare. Direct access to your server (bypassing Cloudflare) will show certificate warnings. This is expected and adds security.
 
 ### TLS Options
 
@@ -132,12 +206,17 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.myapp.rule=Host(`myapp.example.com`)"
       - "traefik.http.routers.myapp.entrypoints=websecure"
+      # Option A: ACME (Let's Encrypt)
       - "traefik.http.routers.myapp.tls.certresolver=cloudflare"
+      # Option B: Origin Certificate (uncomment and remove certresolver)
+      # - "traefik.http.routers.myapp.tls=true"
 
 networks:
   proxy:
     external: true
 ```
+
+When using Origin Certificate with `defaultCertificate` configured, you only need `tls=true` - the default certificate will be used automatically.
 
 ## Environment Variables Reference
 

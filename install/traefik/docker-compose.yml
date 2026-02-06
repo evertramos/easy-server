@@ -1,6 +1,6 @@
 networks:
   proxy:
-    name: proxy
+    external: true
 
 services:
   traefik:
@@ -38,6 +38,7 @@ services:
       - ./conf/dynamic.yml:/etc/traefik/dynamic.yml:ro
       - ./data/acme.json:/acme.json
       - ./data/logs:/var/log/traefik
+      - ./data/certs:/etc/traefik/certs:ro
 
   cloudflared:
     image: cloudflare/cloudflared:latest
@@ -48,3 +49,9 @@ services:
       - TUNNEL_TOKEN=${TUNNEL_TOKEN}
     networks:
       - proxy
+    healthcheck:
+      test: ["CMD", "cloudflared", "tunnel", "info"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s

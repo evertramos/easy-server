@@ -12,5 +12,14 @@ acme.json
 *.log
 logs/
 
-# Data directories
+# Data directories (except README and .gitkeep)
 data/
+!data/certs/
+data/certs/*
+!data/certs/README.md
+!data/certs/.gitkeep
+
+# Certificate files (never commit)
+*.pem
+*.key
+*.crt

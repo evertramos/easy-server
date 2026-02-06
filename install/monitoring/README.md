@@ -38,16 +38,25 @@ monitoring/
     └── alertmanager.yml
 ```
 
+## Prerequisites
+
+- Docker and Docker Compose v2
+- User in the `docker` group (no sudo needed for docker commands)
+- Traefik running with the `proxy` network
+
+```bash
+# Add your user to docker group if not already
+sudo usermod -aG docker $USER
+# Logout and login for changes to take effect
+```
+
 ## Installation
 
 ### 1. Run the install script
 
 ```bash
-# Install to /opt/monitoring (default)
 ./install-monitoring
-
-# Or specify a custom directory
-./install-monitoring /srv
+# Or: ./install-monitoring /srv
 ```
 
 ### 2. Enable Traefik metrics

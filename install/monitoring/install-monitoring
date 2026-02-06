@@ -8,11 +8,13 @@
 # Arguments:
 #   BASE_DIR    Installation directory (default: /opt/monitoring)
 #
+# The script will set proper ownership for the current user.
+#
 set -euo pipefail
 
-# Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_DIR="${1:-/opt/monitoring}"
+CURRENT_USER="${SUDO_USER:-$USER}"
 
 # Colors
 RED='\033[0;31m'
@@ -36,9 +38,15 @@ check_prerequisites() {
         error "Docker Compose v2 is not installed"
     fi
 
+    # Check if user is in docker group
+    if ! groups "$CURRENT_USER" | grep -q docker; then
+        warn "User '$CURRENT_USER' is not in the docker group"
+        warn "Run: sudo usermod -aG docker $CURRENT_USER"
+    fi
+
     # Check if Traefik is running
     if ! docker ps --format '{{.Names}}' | grep -q '^traefik$'; then
-        warn "Traefik container not running. Make sure to start it before monitoring."
+        warn "Traefik container not running. Start it before monitoring."
     fi
 
     # Check if proxy network exists
@@ -49,9 +57,10 @@ check_prerequisites() {
 
 # Create directory structure
 create_directories() {
-    info "Creating directory structure at ${BASE_DIR}..."
+    info "Creating directory structure..."
 
     sudo mkdir -p "${BASE_DIR}"/{prometheus,grafana/provisioning/{dashboards,datasources},alertmanager,loki,promtail}
+    sudo chown -R "$CURRENT_USER:$CURRENT_USER" "${BASE_DIR}"
 }
 
 # Copy files
@@ -59,44 +68,44 @@ copy_files() {
     info "Copying configuration files..."
 
     # Main files
-    sudo cp "${SCRIPT_DIR}/docker-compose.yml" "${BASE_DIR}/"
-    sudo cp "${SCRIPT_DIR}/.env.example" "${BASE_DIR}/"
+    cp "${SCRIPT_DIR}/docker-compose.yml" "${BASE_DIR}/"
+    cp "${SCRIPT_DIR}/.env.example" "${BASE_DIR}/"
 
     # Prometheus
-    sudo cp "${SCRIPT_DIR}/prometheus/prometheus.yml" "${BASE_DIR}/prometheus/"
-    sudo cp "${SCRIPT_DIR}/prometheus/alerts.yml" "${BASE_DIR}/prometheus/"
+    cp "${SCRIPT_DIR}/prometheus/prometheus.yml" "${BASE_DIR}/prometheus/"
+    cp "${SCRIPT_DIR}/prometheus/alerts.yml" "${BASE_DIR}/prometheus/"
 
     # Grafana
-    sudo cp "${SCRIPT_DIR}/grafana/provisioning/datasources/datasource.yml" "${BASE_DIR}/grafana/provisioning/datasources/"
-    sudo cp "${SCRIPT_DIR}/grafana/provisioning/dashboards/dashboard.yml" "${BASE_DIR}/grafana/provisioning/dashboards/"
-    sudo cp "${SCRIPT_DIR}/grafana/provisioning/dashboards/traefik.json" "${BASE_DIR}/grafana/provisioning/dashboards/"
+    cp "${SCRIPT_DIR}/grafana/provisioning/datasources/datasource.yml" "${BASE_DIR}/grafana/provisioning/datasources/"
+    cp "${SCRIPT_DIR}/grafana/provisioning/dashboards/dashboard.yml" "${BASE_DIR}/grafana/provisioning/dashboards/"
+    cp "${SCRIPT_DIR}/grafana/provisioning/dashboards/traefik.json" "${BASE_DIR}/grafana/provisioning/dashboards/"
 
     # Alertmanager
-    sudo cp "${SCRIPT_DIR}/alertmanager/alertmanager.yml" "${BASE_DIR}/alertmanager/"
+    cp "${SCRIPT_DIR}/alertmanager/alertmanager.yml" "${BASE_DIR}/alertmanager/"
 
     # Loki
-    sudo cp "${SCRIPT_DIR}/loki/loki.yml" "${BASE_DIR}/loki/"
+    cp "${SCRIPT_DIR}/loki/loki.yml" "${BASE_DIR}/loki/"
 
     # Promtail
-    sudo cp "${SCRIPT_DIR}/promtail/promtail.yml" "${BASE_DIR}/promtail/"
+    cp "${SCRIPT_DIR}/promtail/promtail.yml" "${BASE_DIR}/promtail/"
 }
 
 # Set permissions
 set_permissions() {
     info "Setting permissions..."
 
-    # Grafana needs specific UID
+    # Grafana container runs as UID 472
     sudo chown -R 472:472 "${BASE_DIR}/grafana" 2>/dev/null || true
 }
 
-# Create .env if not exists
+# Create .env
 create_env() {
     if [[ ! -f "${BASE_DIR}/.env" ]]; then
         info "Creating .env file..."
-        sudo cp "${BASE_DIR}/.env.example" "${BASE_DIR}/.env"
+        cp "${BASE_DIR}/.env.example" "${BASE_DIR}/.env"
         warn "Edit ${BASE_DIR}/.env to configure domains and credentials"
     else
-        info ".env file already exists, skipping"
+        info ".env already exists, skipping"
     fi
 }
 
@@ -107,23 +116,16 @@ print_next_steps() {
     echo ""
     echo "Next steps:"
     echo ""
-    echo "1. Configure environment variables:"
-    echo "   sudo vi ${BASE_DIR}/.env"
+    echo "1. Configure environment:"
+    echo "   vi ${BASE_DIR}/.env"
     echo ""
-    echo "2. Generate password hashes for Basic Auth:"
-    echo "   htpasswd -nbB admin 'yourpassword' | sed 's/\$/\$\$/g'"
+    echo "2. Generate password hashes:"
+    echo "   htpasswd -nbB admin 'password' | sed 's/\$/\$\$/g'"
     echo ""
-    echo "3. Enable metrics in Traefik (traefik.yml):"
-    echo "   metrics:"
-    echo "     prometheus:"
-    echo "       addEntryPointsLabels: true"
-    echo "       addRoutersLabels: true"
-    echo "       addServicesLabels: true"
+    echo "3. Start the stack:"
+    echo "   cd ${BASE_DIR} && docker compose up -d"
     echo ""
-    echo "4. Start the monitoring stack:"
-    echo "   cd ${BASE_DIR} && sudo docker compose up -d"
-    echo ""
-    echo "5. Access Grafana:"
+    echo "4. Access Grafana:"
     echo "   https://\${GRAFANA_DOMAIN}"
     echo ""
 }
@@ -131,7 +133,9 @@ print_next_steps() {
 # Main
 main() {
     echo ""
-    echo "=== Monitoring Stack Installation (Prometheus + Grafana + Loki) ==="
+    echo -e "${GREEN}=== Monitoring Stack Installation ===${NC}"
+    echo "Destination: $BASE_DIR"
+    echo "Owner: $CURRENT_USER"
     echo ""
 
     check_prerequisites

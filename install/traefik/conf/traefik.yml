@@ -6,7 +6,7 @@ api:
 
 # Health check endpoint for container orchestration
 ping:
-  entryPoint: websecure
+  entryPoint: traefik
 
 entryPoints:
   web:
@@ -86,6 +86,9 @@ entryPoints:
   # Internal entrypoint for Prometheus metrics (not exposed publicly)
   metrics:
     address: ":8080"
+  # Internal entrypoint for healthcheck ping
+  traefik:
+    address: ":8082"
 
 providers:
   docker:
