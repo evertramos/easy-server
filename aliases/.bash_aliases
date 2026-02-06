@@ -158,13 +158,13 @@ alias fc='flutter config'
 alias tor='cd ~/Downloads/tor && ./start-tor-browser.desktop && cd -'
 
 # Other Aliases
-ALIAS_HOME_BASE_PATH="$HOME/server"
+ALIAS_HOME_BASE_PATH="/opt"
 
-alias gg='cd $ALIAS_HOME_BASE_PATH'         # Basedir
-alias ggs='cd $ALIAS_HOME_BASE_PATH/sites'  # Sites
-alias ggb='cd $ALIAS_HOME_BASE_PATH/backup' # Backup
-alias ggp='cd $ALIAS_HOME_BASE_PATH/proxy'  # Proxy
-alias ggd='cd $ALIAS_HOME_BASE_PATH/dev'    # Development
+alias gg='cd $ALIAS_HOME_BASE_PATH'             # Basedir
+alias ggs='cd $ALIAS_HOME_BASE_PATH/sites'      # Sites
+alias ggb='cd $ALIAS_HOME_BASE_PATH/backup'     # Backup
+alias ggp='cd $ALIAS_HOME_BASE_PATH/traefik'    # Traefik
+alias ggd='cd $ALIAS_HOME_BASE_PATH/dev'        # Development
 
 # Sail
 alias sail='bash vendor/bin/sail'
