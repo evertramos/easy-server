@@ -74,8 +74,9 @@ copy_files() {
 
     # Copy bin scripts
     if [[ -d "$SCRIPT_DIR/bin" ]]; then
-        cp -r "$SCRIPT_DIR/bin/"* "$DEST_DIR/bin/"
-        chmod +x "$DEST_DIR/bin/"*
+        cp -r "$SCRIPT_DIR/bin/." "$DEST_DIR/bin/"
+        # Make scripts executable (not .env or .yml files)
+        find "$DEST_DIR/bin" -type f ! -name "*.yml" ! -name "*.example" -exec chmod +x {} \;
     fi
 
     # Copy data files if they exist
@@ -86,6 +87,9 @@ copy_files() {
 
     # Create acme.json if it doesn't exist
     touch "$DEST_DIR/data/acme.json"
+
+    # Copy README
+    [[ -f "$SCRIPT_DIR/README.md" ]] && cp "$SCRIPT_DIR/README.md" "$DEST_DIR/"
 }
 
 # Set permissions
@@ -112,14 +116,18 @@ print_next_steps() {
     echo "1. Configure environment:"
     echo "   vi $DEST_DIR/.env"
     echo ""
-    echo "2. Generate dashboard password:"
+    echo -e "2. ${YELLOW}IMPORTANT:${NC} Update ACME email in traefik.yml:"
+    echo "   vi $DEST_DIR/conf/traefik.yml"
+    echo "   (Change CHANGE-ME@yourdomain.com to your real email)"
+    echo ""
+    echo "3. Generate dashboard password:"
     echo "   $DEST_DIR/bin/gen-password admin"
     echo ""
-    echo "3. (Optional) Setup Cloudflare Origin Certificate:"
+    echo "4. (Optional) Setup Cloudflare Origin Certificate:"
     echo "   See README.md for instructions"
     echo "   Place files in: $DEST_DIR/data/certs/"
     echo ""
-    echo "4. Start Traefik:"
+    echo "5. Start Traefik:"
     echo "   cd $DEST_DIR && docker compose up -d"
     echo ""
 }

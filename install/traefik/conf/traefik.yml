@@ -116,10 +116,12 @@ serversTransport:
   insecureSkipVerify: false
 
 # ACME - Certificate Resolvers
+# IMPORTANT: Change the email below to your real email address!
+# Let's Encrypt will reject emails with "example.com" domain.
 certificatesResolvers:
   bunny:
     acme:
-      email: "tlc@example.com"
+      email: "CHANGE-ME@yourdomain.com"
       storage: "/acme.json"
       dnsChallenge:
         provider: bunny
@@ -127,7 +129,7 @@ certificatesResolvers:
 
   cloudflare:
     acme:
-      email: "tlc@example.com"
+      email: "CHANGE-ME@yourdomain.com"
       storage: "/acme.json"
       dnsChallenge:
         provider: cloudflare
@@ -135,9 +137,10 @@ certificatesResolvers:
         resolvers:
           - "1.1.1.1:53"
           - "1.0.0.1:53"
+
   le:
     acme:
-      email: "tlc@example.com"
+      email: "CHANGE-ME@yourdomain.com"
       storage: "/acme.json"
       httpChallenge:
         entryPoint: web
