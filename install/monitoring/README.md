@@ -162,11 +162,31 @@ Or import directly in Grafana UI (changes persist in volume).
 
 ## Cloudflare Tunnel Integration
 
-To access monitoring behind Zero Trust:
+> **IMPORTANT**: All monitoring URLs (Grafana, Prometheus, Alertmanager) should be behind Cloudflare Zero Trust. These dashboards expose sensitive information about your infrastructure and should never be publicly accessible.
 
-1. Add the domains to your Cloudflare Tunnel configuration
-2. Configure Access policies in Cloudflare Zero Trust dashboard
+### Setup
+
+1. Add the domains to your Cloudflare Tunnel configuration:
+   - `grafana.example.com`
+   - `prometheus.example.com`
+   - `alertmanager.example.com`
+
+2. Configure Access policies in Cloudflare Zero Trust dashboard:
+   - Create an Access Application for each domain
+   - Require authentication (email, identity provider, etc.)
+   - Optionally restrict to specific users/groups
+
 3. The services are already on the `proxy` network with Traefik
+
+### Why Zero Trust?
+
+| Dashboard | Exposes |
+|-----------|---------|
+| Grafana | Metrics, logs, infrastructure topology |
+| Prometheus | All metrics, scrape targets, internal IPs |
+| Alertmanager | Alert rules, notification endpoints |
+
+Even with Basic Auth, these should be behind Zero Trust for defense in depth.
 
 ## Using Loki (Logs)
 

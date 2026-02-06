@@ -1,1 +1,16 @@
 .idea
+
+# Environment files (never commit secrets)
+.env
+*.env
+!*.env.example
+
+# ACME certificates
+acme.json
+
+# Logs
+*.log
+logs/
+
+# Data directories
+data/
