@@ -574,10 +574,7 @@
         "multi": true,
         "name": "service",
         "options": [],
-        "query": {
-          "query": "label_values(traefik_service_requests_total, service)",
-          "refId": "PrometheusVariableQueryEditor-VariableQuery"
-        },
+        "query": "label_values(traefik_service_requests_total, service)",
         "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
