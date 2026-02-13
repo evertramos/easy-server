@@ -90,6 +90,10 @@ parse_args() {
                 TIMEOUT="$2"
                 shift 2
                 ;;
+            --verbose|-v)
+                VERBOSE=true
+                shift
+                ;;
             --help|-h)
                 echo "Usage: $0 [OPTIONS]"
                 echo ""
@@ -97,6 +101,7 @@ parse_args() {
                 echo "  --parallel, -p N    Run N tests in parallel (default: 1)"
                 echo "  --filter, -f TEXT   Only test distros matching TEXT"
                 echo "  --timeout, -t SECS  Timeout per container in seconds (default: 300)"
+                echo "  --verbose, -v       Show full error output for failed tests"
                 echo "  --help, -h          Show this help"
                 exit 0
                 ;;
@@ -738,14 +743,20 @@ main() {
 
             echo -e "    ${RED}*${NC} ${dist}"
 
-            # Show error snippet
-            if [[ -f "$error_file" && -s "$error_file" ]]; then
+            if [[ "$VERBOSE" == true && -n "$log_path" && -f "$log_path" ]]; then
+                # Verbose: show last 20 lines of the full log
+                echo -e "      ${DIM}--- last 20 lines of log ---${NC}"
+                tail -20 "$log_path" | while IFS= read -r line; do
+                    echo -e "      ${DIM}${line}${NC}"
+                done
+                echo -e "      ${DIM}----------------------------${NC}"
+            elif [[ -f "$error_file" && -s "$error_file" ]]; then
+                # Normal: show filtered error snippet
                 while IFS= read -r line; do
                     echo -e "      ${DIM}${line}${NC}"
                 done < "$error_file"
             fi
 
-            # Show log file path
             if [[ -n "$log_path" ]]; then
                 echo -e "      ${DIM}Log: ${log_path}${NC}"
             fi
@@ -758,7 +769,6 @@ main() {
         for dist in "${pull_failed[@]}"; do
             local sanitized
             sanitized=$(echo "$dist" | tr ' ()/' '____')
-            local error_file="${tmpdir}/${sanitized}.error"
             local logref_file="${tmpdir}/${sanitized}.log_path"
             local log_path=""
             if [[ -f "$logref_file" ]]; then
@@ -766,11 +776,7 @@ main() {
             fi
 
             echo -e "    ${YELLOW}*${NC} ${dist}"
-            if [[ -f "$error_file" && -s "$error_file" ]]; then
-                while IFS= read -r line; do
-                    echo -e "      ${DIM}${line}${NC}"
-                done < "$error_file"
-            fi
+            echo -e "      ${DIM}Could not pull Docker image${NC}"
             if [[ -n "$log_path" ]]; then
                 echo -e "      ${DIM}Log: ${log_path}${NC}"
             fi
