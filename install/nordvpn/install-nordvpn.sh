@@ -80,7 +80,11 @@ get_pkg_family() {
             PKG_FAMILY="dnf"
             ;;
         centos|rhel|rocky|almalinux|ol|amzn)
-            PKG_FAMILY="yum"
+            if command -v dnf &>/dev/null; then
+                PKG_FAMILY="dnf"
+            else
+                PKG_FAMILY="yum"
+            fi
             ;;
         opensuse*|sles)
             PKG_FAMILY="zypper"
@@ -208,8 +212,8 @@ gpgcheck=1
 gpgkey=${NORDVPN_GPG_URL}
 EOF
 
-    # Install NordVPN
-    dnf install -y "$PACKAGE_NAME"
+    # Install NordVPN (--allowerasing handles conflicts on RHEL 9+)
+    dnf install -y --allowerasing "$PACKAGE_NAME"
 
     log_success "NordVPN installed via DNF."
 }
@@ -250,11 +254,15 @@ install_zypper() {
     # Import GPG key
     rpm -v --import "$NORDVPN_GPG_URL"
 
-    # Add repository
-    zypper addrepo --refresh --gpgcheck "$NORDVPN_RPM_REPO" nordvpn
+    # Add repository (rpm-md type for CentOS-style repos)
+    zypper addrepo --type rpm-md --refresh --gpgcheck "$NORDVPN_RPM_REPO" nordvpn 2>/dev/null \
+        || log_warn "Repository already exists, continuing..."
+
+    # Force refresh the repo metadata
+    zypper --gpg-auto-import-keys refresh nordvpn
 
     # Install NordVPN
-    zypper install -y "$PACKAGE_NAME"
+    zypper --non-interactive install "$PACKAGE_NAME"
 
     log_success "NordVPN installed via Zypper."
 }

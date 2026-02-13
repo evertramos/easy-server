@@ -54,11 +54,13 @@ DISTROS=(
     "fedora:40|Fedora 40|dnf"
     "fedora:41|Fedora 41|dnf"
 
-    # RPM-based (YUM)
+    # RPM-based (DNF - RHEL 9 family)
+    "rockylinux:9|Rocky Linux 9|dnf"
+    "almalinux:9|AlmaLinux 9|dnf"
+
+    # RPM-based (YUM - RHEL 8 family, glibc 2.28 - NordVPN needs >= 2.29, expect FAIL)
     "rockylinux:8|Rocky Linux 8|yum"
-    "rockylinux:9|Rocky Linux 9|yum"
     "almalinux:8|AlmaLinux 8|yum"
-    "almalinux:9|AlmaLinux 9|yum"
 
     # Zypper-based
     "opensuse/leap:15.6|openSUSE Leap 15.6|zypper"
@@ -129,14 +131,13 @@ preflight() {
 }
 
 #---------------------------------------------------------------------------------
-# Spinner - shows animated progress on the current line
+# Spinner - shows animated progress on the current line (sequential mode only)
 #---------------------------------------------------------------------------------
 
 SPINNER_PID=""
 
 spinner_start() {
-    local label="$1"
-    local phase="$2"
+    local phase="$1"
     local frames=('/' '-' '\' '|')
 
     (
@@ -154,7 +155,7 @@ spinner_start() {
                 time_str="${secs}s"
             fi
             local frame="${frames[$((i % 4))]}"
-            printf "\r  ${DIM}%s${NC} ${phase}  ${DIM}%s${NC}   " "$frame" "$time_str" >&2
+            printf "\r  ${DIM}%s${NC} %s  ${DIM}%s${NC}   " "$frame" "$phase" "$time_str" >&2
             i=$((i + 1))
             sleep 0.25
         done
@@ -172,9 +173,6 @@ spinner_stop() {
     fi
 }
 
-# Ensure spinner is cleaned up on exit
-trap 'spinner_stop' EXIT
-
 #---------------------------------------------------------------------------------
 # Format elapsed time
 #---------------------------------------------------------------------------------
@@ -184,18 +182,14 @@ format_time() {
     local mins=$((secs / 60))
     local rem=$((secs % 60))
     if [[ $mins -gt 0 ]]; then
-        echo "${mins}m${rem}s"
+        printf "%dm%ds" "$mins" "$rem"
     else
-        echo "${rem}s"
+        printf "%ds" "$rem"
     fi
 }
 
 #---------------------------------------------------------------------------------
 # Build the test command for each distro family
-#
-# Docker containers don't have systemd, so we validate installation by checking
-# that the 'nordvpn' binary is present after running the install script.
-# The install script already handles missing systemctl gracefully.
 #---------------------------------------------------------------------------------
 
 build_test_cmd() {
@@ -243,7 +237,6 @@ exit $RESULT
 DOCKER_CMD
             ;;
         pacman)
-            # Arch AUR requires a non-root user with sudo
             cat <<'DOCKER_CMD'
 pacman -Syu --noconfirm sudo
 useradd -m builder
@@ -264,34 +257,36 @@ DOCKER_CMD
 }
 
 #---------------------------------------------------------------------------------
-# Progress bar
+# Progress bar (used in both modes)
 #---------------------------------------------------------------------------------
 
-print_progress_bar() {
+render_progress_bar() {
     local current="$1"
     local total="$2"
     local passed="$3"
     local failed="$4"
     local width=30
-    local filled=$((current * width / total))
-    local empty=$((width - filled))
+    local filled=0
+    if [[ $total -gt 0 && $current -gt 0 ]]; then
+        filled=$((current * width / total))
+    fi
 
     local bar=""
     for ((i = 0; i < filled; i++)); do bar+="="; done
     if [[ $filled -lt $width ]]; then
         bar+=">"
-        for ((i = 1; i < empty; i++)); do bar+=" "; done
+        for ((i = filled + 1; i < width; i++)); do bar+=" "; done
     fi
 
-    printf "\r  ${DIM}[${NC}${CYAN}%s${NC}${DIM}]${NC} %d/%d  " "$bar" "$current" "$total" >&2
-    printf "${GREEN}%d passed${NC}  ${RED}%d failed${NC}   \n" "$passed" "$failed" >&2
+    printf "  ${DIM}[${NC}${CYAN}%s${NC}${DIM}]${NC} %d/%d  ${GREEN}%d passed${NC}  ${RED}%d failed${NC}" \
+        "$bar" "$current" "$total" "$passed" "$failed"
 }
 
-#---------------------------------------------------------------------------------
-# Run a single test (writes result to result_file, progress to terminal)
-#---------------------------------------------------------------------------------
+#=================================================================================
+#  SEQUENTIAL MODE
+#=================================================================================
 
-run_test() {
+run_test_sequential() {
     local image="$1"
     local label="$2"
     local family="$3"
@@ -308,23 +303,21 @@ run_test() {
     printf "\n  ${BOLD}[%s]${NC} ${CYAN}%s${NC} ${DIM}(%s)${NC}\n" "$counter" "$label" "$image" >&2
     echo "[START] ${label} (${image})" >> "$log_file"
 
-    # Remove any leftover container with the same name
     docker rm -f "$container_name" &>/dev/null 2>&1 || true
 
-    # --- Pull image ---
-    spinner_start "$label" "Pulling image..."
+    # Pull
+    spinner_start "Pulling image..."
     if ! docker pull "$image" >> "$log_file" 2>&1; then
         spinner_stop
         local elapsed=$(( $(date +%s) - test_start ))
         printf "  ${RED}PULL FAIL${NC}  Could not pull ${image}  ${DIM}%s${NC}\n" "$(format_time $elapsed)" >&2
-        echo "[PULL FAIL] ${label}" >> "$log_file"
         echo "PULL_FAIL" > "$result_file"
         return
     fi
     spinner_stop
 
-    # --- Run install script ---
-    spinner_start "$label" "Installing NordVPN..."
+    # Install
+    spinner_start "Installing NordVPN..."
     local output
     output=$(timeout "${TIMEOUT}s" docker run \
         --name "$container_name" \
@@ -335,25 +328,218 @@ run_test() {
     spinner_stop
 
     echo "$output" >> "$log_file"
-
     local elapsed=$(( $(date +%s) - test_start ))
 
-    # --- Check result ---
+    local error_file="${result_file%.result}.error"
+    local logref_file="${result_file%.result}.log_path"
+    echo "$log_file" > "$logref_file"
+
     if echo "$output" | grep -q "NORDVPN_BINARY_FOUND=true"; then
         printf "  ${GREEN}PASS${NC}  %s  ${DIM}%s${NC}\n" "$label" "$(format_time $elapsed)" >&2
-        echo "[PASS] ${label}" >> "$log_file"
         echo "PASS" > "$result_file"
     else
         printf "  ${RED}FAIL${NC}  %s  ${DIM}%s${NC}\n" "$label" "$(format_time $elapsed)" >&2
         echo "$output" | tail -3 | sed 's/^/         /' >&2
-        echo "[FAIL] ${label}" >> "$log_file"
         echo "FAIL" > "$result_file"
+        # Save error snippet for the summary
+        echo "$output" | grep -iE '(error|fail|nothing|cannot|unable|denied|not found|unbound)' \
+            | tail -5 > "$error_file" 2>/dev/null || true
+        # Fallback: last non-empty lines if no pattern matched
+        if [[ ! -s "$error_file" ]]; then
+            echo "$output" | grep -v '^\s*$' | tail -5 > "$error_file" 2>/dev/null || true
+        fi
     fi
 }
 
-#---------------------------------------------------------------------------------
-# Main
-#---------------------------------------------------------------------------------
+#=================================================================================
+#  PARALLEL MODE - Live dashboard
+#=================================================================================
+
+# Globals for the dashboard
+STATUS_DIR=""
+DASHBOARD_LABELS=()
+DASHBOARD_TOTAL=0
+RENDERER_PID=""
+DASHBOARD_LINES=0
+
+# Write a status update for a distro (called from test subshells)
+# Phases: waiting, pulling, installing, pass, fail, pull_fail
+# Format: "phase|timestamp_or_elapsed"
+#   Active phases use start timestamp (renderer computes elapsed)
+#   Final phases use total elapsed seconds (fixed display)
+write_status() {
+    local label="$1"
+    local phase="$2"
+    local value="$3"
+    local sanitized
+    sanitized=$(echo "$label" | tr ' ()/' '____')
+    echo "${phase}|${value}" > "${STATUS_DIR}/${sanitized}.status"
+}
+
+# Render the full dashboard (all distros + progress bar)
+render_dashboard() {
+    local now
+    now=$(date +%s)
+    local frames=('/' '-' '\' '|')
+    local frame_idx=$(( now % 4 ))
+    local frame="${frames[$frame_idx]}"
+
+    local pass_count=0
+    local fail_count=0
+    local done_count=0
+
+    # Move cursor up to overwrite previous render
+    if [[ $DASHBOARD_LINES -gt 0 ]]; then
+        printf "\033[%dA" "$DASHBOARD_LINES" >&2
+    fi
+
+    local lines_printed=0
+
+    for i in "${!DASHBOARD_LABELS[@]}"; do
+        local label="${DASHBOARD_LABELS[$i]}"
+        local num=$((i + 1))
+        local sanitized
+        sanitized=$(echo "$label" | tr ' ()/' '____')
+        local status_file="${STATUS_DIR}/${sanitized}.status"
+
+        local phase="waiting"
+        local value="0"
+        if [[ -f "$status_file" ]]; then
+            IFS='|' read -r phase value < "$status_file" 2>/dev/null || true
+        fi
+
+        local padded_num
+        padded_num=$(printf "%2d" "$num")
+        local padded_label
+        padded_label=$(printf "%-28s" "$label")
+
+        case "$phase" in
+            waiting)
+                printf "\033[K  ${DIM}%s. %s         Waiting${NC}\n" \
+                    "$padded_num" "$padded_label" >&2
+                ;;
+            pulling)
+                local elapsed=$(( now - value ))
+                printf "\033[K  ${DIM}%s.${NC} %s  ${CYAN}%s${NC}  Pulling      ${DIM}%s${NC}\n" \
+                    "$padded_num" "$padded_label" "$frame" "$(format_time $elapsed)" >&2
+                ;;
+            installing)
+                local elapsed=$(( now - value ))
+                printf "\033[K  ${DIM}%s.${NC} %s  ${CYAN}%s${NC}  Installing   ${DIM}%s${NC}\n" \
+                    "$padded_num" "$padded_label" "$frame" "$(format_time $elapsed)" >&2
+                ;;
+            pass)
+                printf "\033[K  ${DIM}%s.${NC} %s  ${GREEN}PASS${NC}             ${DIM}%s${NC}\n" \
+                    "$padded_num" "$padded_label" "$(format_time "$value")" >&2
+                ((pass_count++))
+                ((done_count++))
+                ;;
+            fail)
+                printf "\033[K  ${DIM}%s.${NC} %s  ${RED}FAIL${NC}             ${DIM}%s${NC}\n" \
+                    "$padded_num" "$padded_label" "$(format_time "$value")" >&2
+                ((fail_count++))
+                ((done_count++))
+                ;;
+            pull_fail)
+                printf "\033[K  ${DIM}%s.${NC} %s  ${YELLOW}PULL FAIL${NC}        ${DIM}%s${NC}\n" \
+                    "$padded_num" "$padded_label" "$(format_time "$value")" >&2
+                ((fail_count++))
+                ((done_count++))
+                ;;
+        esac
+        ((lines_printed++))
+    done
+
+    # Empty line + progress bar
+    printf "\033[K\n" >&2
+    printf "\033[K%s\n" "$(render_progress_bar "$done_count" "$DASHBOARD_TOTAL" "$pass_count" "$fail_count")" >&2
+    lines_printed=$((lines_printed + 2))
+
+    DASHBOARD_LINES=$lines_printed
+}
+
+# Background renderer loop
+start_renderer() {
+    (
+        while true; do
+            render_dashboard
+            sleep 0.4
+        done
+    ) &
+    RENDERER_PID=$!
+    disown "$RENDERER_PID" 2>/dev/null
+}
+
+stop_renderer() {
+    if [[ -n "${RENDERER_PID:-}" ]]; then
+        kill "$RENDERER_PID" 2>/dev/null
+        wait "$RENDERER_PID" 2>/dev/null || true
+        RENDERER_PID=""
+    fi
+}
+
+# Run a single test in parallel mode (writes status updates, no terminal output)
+run_test_parallel() {
+    local image="$1"
+    local label="$2"
+    local family="$3"
+    local log_file="$4"
+    local result_file="$5"
+
+    local container_name="nordvpn-test-$(echo "$label" | tr ' ()/' '____' | tr '[:upper:]' '[:lower:]')"
+    local test_cmd
+    test_cmd=$(build_test_cmd "$family")
+    local test_start
+    test_start=$(date +%s)
+
+    local error_file="${result_file%.result}.error"
+    local logref_file="${result_file%.result}.log_path"
+    echo "$log_file" > "$logref_file"
+
+    echo "[START] ${label} (${image})" >> "$log_file"
+    docker rm -f "$container_name" &>/dev/null 2>&1 || true
+
+    # Pull
+    write_status "$label" "pulling" "$test_start"
+    if ! docker pull "$image" >> "$log_file" 2>&1; then
+        local elapsed=$(( $(date +%s) - test_start ))
+        write_status "$label" "pull_fail" "$elapsed"
+        echo "PULL_FAIL" > "$result_file"
+        echo "Could not pull image: ${image}" > "$error_file"
+        return
+    fi
+
+    # Install
+    write_status "$label" "installing" "$test_start"
+    local output
+    output=$(timeout "${TIMEOUT}s" docker run \
+        --name "$container_name" \
+        --rm \
+        -v "${INSTALL_SCRIPT}:/tmp/install-nordvpn.sh:ro" \
+        "$image" \
+        bash -c "$test_cmd" 2>&1) || true
+
+    echo "$output" >> "$log_file"
+    local elapsed=$(( $(date +%s) - test_start ))
+
+    if echo "$output" | grep -q "NORDVPN_BINARY_FOUND=true"; then
+        write_status "$label" "pass" "$elapsed"
+        echo "PASS" > "$result_file"
+    else
+        write_status "$label" "fail" "$elapsed"
+        echo "FAIL" > "$result_file"
+        # Save error snippet for the summary
+        echo "$output" | grep -iE '(error|fail|nothing|cannot|unable|denied|not found|unbound)' \
+            | tail -5 > "$error_file" 2>/dev/null || true
+        if [[ ! -s "$error_file" ]]; then
+            echo "$output" | grep -v '^\s*$' | tail -5 > "$error_file" 2>/dev/null || true
+        fi
+    fi
+}
+
+#=================================================================================
+#  MAIN
+#=================================================================================
 
 main() {
     parse_args "$@"
@@ -377,7 +563,7 @@ main() {
         echo -e "  ${CYAN}Filter:${NC}   ${FILTER}"
     fi
 
-    # Filter distros if requested
+    # Filter distros
     local filtered_distros=()
     for entry in "${DISTROS[@]}"; do
         if [[ -z "$FILTER" ]] || echo "$entry" | grep -qi "$FILTER"; then
@@ -393,27 +579,30 @@ main() {
 
     echo ""
     echo -e "  ${BOLD}Testing ${total} distribution(s)${NC}"
-    echo -e "  ${DIM}$(printf '%.0s-' {1..45})${NC}"
+    echo -e "  ${DIM}$(printf '%.0s-' {1..50})${NC}"
 
-    # Prepare result files
     local tmpdir
     tmpdir=$(mktemp -d)
 
-    # Arrays to track results
+    # Cleanup on exit
+    trap 'spinner_stop; stop_renderer; rm -rf "$tmpdir"' EXIT
+
     local -a passed=()
     local -a failed=()
     local -a pull_failed=()
-    local current=0
 
     if [[ $PARALLEL -le 1 ]]; then
-        # Sequential execution
+        #---------------------------------------------------------------------
+        # Sequential mode (with spinner)
+        #---------------------------------------------------------------------
+        local current=0
         for entry in "${filtered_distros[@]}"; do
             IFS='|' read -r image label family <<< "$entry"
             current=$((current + 1))
             local log_file="${LOG_DIR}/${timestamp}_$(echo "$label" | tr ' ()/' '____').log"
             local result_file="${tmpdir}/$(echo "$label" | tr ' ()/' '____').result"
 
-            run_test "$image" "$label" "$family" "$log_file" "$result_file" "${current}/${total}"
+            run_test_sequential "$image" "$label" "$family" "$log_file" "$result_file" "${current}/${total}"
 
             local result
             result=$(cat "$result_file" 2>/dev/null || echo "FAIL")
@@ -423,32 +612,65 @@ main() {
                 *)         failed+=("$label") ;;
             esac
 
-            # Show running tally
-            print_progress_bar "$current" "$total" "${#passed[@]}" "$(( ${#failed[@]} + ${#pull_failed[@]} ))"
+            printf "\n%s\n" "$(render_progress_bar "$current" "$total" "${#passed[@]}" "$(( ${#failed[@]} + ${#pull_failed[@]} ))")" >&2
         done
     else
-        # Parallel execution
-        local job_count=0
+        #---------------------------------------------------------------------
+        # Parallel mode (with live dashboard)
+        #---------------------------------------------------------------------
+        STATUS_DIR="${tmpdir}/status"
+        mkdir -p "$STATUS_DIR"
+        DASHBOARD_TOTAL=$total
+        DASHBOARD_LABELS=()
+        DASHBOARD_LINES=0
+
+        # Initialize all status files and label array
+        for entry in "${filtered_distros[@]}"; do
+            IFS='|' read -r _ label _ <<< "$entry"
+            DASHBOARD_LABELS+=("$label")
+            write_status "$label" "waiting" "0"
+        done
+
+        # Initial render + start background renderer
+        echo "" >&2
+        render_dashboard
+        start_renderer
+
+        # Concurrency control via FIFO semaphore
+        local fifo="${tmpdir}/fifo"
+        mkfifo "$fifo"
+        exec 3<>"$fifo"
+        for ((i = 0; i < PARALLEL; i++)); do
+            echo >&3
+        done
+
+        local all_pids=()
 
         for entry in "${filtered_distros[@]}"; do
             IFS='|' read -r image label family <<< "$entry"
-            current=$((current + 1))
             local log_file="${LOG_DIR}/${timestamp}_$(echo "$label" | tr ' ()/' '____').log"
             local result_file="${tmpdir}/$(echo "$label" | tr ' ()/' '____').result"
 
-            (
-                run_test "$image" "$label" "$family" "$log_file" "$result_file" "${current}/${total}"
-            ) &
+            # Wait for an available slot
+            read -u 3
 
-            job_count=$((job_count + 1))
-            if [[ $job_count -ge $PARALLEL ]]; then
-                wait -n 2>/dev/null || wait
-                job_count=$((job_count - 1))
-            fi
+            (
+                run_test_parallel "$image" "$label" "$family" "$log_file" "$result_file"
+                echo >&3  # Release slot
+            ) &
+            all_pids+=($!)
         done
 
-        # Wait for remaining jobs
-        wait
+        # Wait for all test jobs to finish
+        for pid in "${all_pids[@]}"; do
+            wait "$pid" 2>/dev/null || true
+        done
+
+        exec 3>&-
+
+        # Stop renderer and do one final render
+        stop_renderer
+        render_dashboard
 
         # Collect results
         for entry in "${filtered_distros[@]}"; do
@@ -468,35 +690,29 @@ main() {
         done
     fi
 
-    rm -rf "$tmpdir"
-
-    # Calculate duration
+    # Duration
     local end_time
     end_time=$(date +%s)
     local duration=$((end_time - start_time))
 
-    # Print summary
-    echo ""
-    echo -e "  ${DIM}$(printf '%.0s-' {1..45})${NC}"
-    echo -e "  ${BOLD}Results${NC}                  ${DIM}$(format_time $duration) total${NC}"
-    echo -e "  ${DIM}$(printf '%.0s-' {1..45})${NC}"
-    echo ""
-
-    # Results table
+    # Summary
     local pass_count=${#passed[@]}
     local fail_count=${#failed[@]}
     local pull_count=${#pull_failed[@]}
+    local error_total=$((fail_count + pull_count))
     local pass_pct=0
     if [[ $total -gt 0 ]]; then
         pass_pct=$((pass_count * 100 / total))
     fi
 
+    echo ""
+    echo -e "  ${DIM}$(printf '%.0s-' {1..50})${NC}"
+    echo -e "  ${BOLD}Results${NC}                       ${DIM}$(format_time $duration) total${NC}"
+    echo -e "  ${DIM}$(printf '%.0s-' {1..50})${NC}"
+    echo ""
     echo -e "  ${CYAN}Total:${NC}    ${total} distributions"
     echo -e "  ${GREEN}Passed:${NC}   ${pass_count}  ${DIM}(${pass_pct}%)${NC}"
-    echo -e "  ${RED}Failed:${NC}   ${fail_count}"
-    if [[ $pull_count -gt 0 ]]; then
-        echo -e "  ${YELLOW}Skipped:${NC}  ${pull_count}  ${DIM}(image pull failed)${NC}"
-    fi
+    echo -e "  ${RED}Failed:${NC}   ${error_total}"
     echo ""
 
     if [[ ${#passed[@]} -gt 0 ]]; then
@@ -510,27 +726,63 @@ main() {
     if [[ ${#failed[@]} -gt 0 ]]; then
         echo -e "  ${RED}${BOLD}Failed:${NC}"
         for dist in "${failed[@]}"; do
+            local sanitized
+            sanitized=$(echo "$dist" | tr ' ()/' '____')
+            local error_file="${tmpdir}/${sanitized}.error"
+            local logref_file="${tmpdir}/${sanitized}.log_path"
+            local log_path=""
+            if [[ -f "$logref_file" ]]; then
+                log_path=$(cat "$logref_file")
+            fi
+
             echo -e "    ${RED}*${NC} ${dist}"
+
+            # Show error snippet
+            if [[ -f "$error_file" && -s "$error_file" ]]; then
+                while IFS= read -r line; do
+                    echo -e "      ${DIM}${line}${NC}"
+                done < "$error_file"
+            fi
+
+            # Show log file path
+            if [[ -n "$log_path" ]]; then
+                echo -e "      ${DIM}Log: ${log_path}${NC}"
+            fi
+            echo ""
         done
-        echo ""
     fi
 
     if [[ ${#pull_failed[@]} -gt 0 ]]; then
         echo -e "  ${YELLOW}${BOLD}Skipped (pull failed):${NC}"
         for dist in "${pull_failed[@]}"; do
+            local sanitized
+            sanitized=$(echo "$dist" | tr ' ()/' '____')
+            local error_file="${tmpdir}/${sanitized}.error"
+            local logref_file="${tmpdir}/${sanitized}.log_path"
+            local log_path=""
+            if [[ -f "$logref_file" ]]; then
+                log_path=$(cat "$logref_file")
+            fi
+
             echo -e "    ${YELLOW}*${NC} ${dist}"
+            if [[ -f "$error_file" && -s "$error_file" ]]; then
+                while IFS= read -r line; do
+                    echo -e "      ${DIM}${line}${NC}"
+                done < "$error_file"
+            fi
+            if [[ -n "$log_path" ]]; then
+                echo -e "      ${DIM}Log: ${log_path}${NC}"
+            fi
+            echo ""
         done
-        echo ""
     fi
 
-    echo -e "  ${DIM}Logs: ${LOG_DIR}/${NC}"
+    echo -e "  ${DIM}All logs: ${LOG_DIR}/${NC}"
     echo ""
 
-    # Exit with error code if any test failed
-    if [[ $fail_count -gt 0 || $pull_count -gt 0 ]]; then
+    if [[ $error_total -gt 0 ]]; then
         exit 1
     fi
-
     exit 0
 }
 
