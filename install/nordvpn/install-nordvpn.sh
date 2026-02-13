@@ -50,7 +50,8 @@ detect_distro() {
     if [[ -f /etc/os-release ]]; then
         . /etc/os-release
         DISTRO_ID="${ID,,}"
-        DISTRO_ID_LIKE="${ID_LIKE,,:-}"
+        DISTRO_ID_LIKE="${ID_LIKE:-}"
+        DISTRO_ID_LIKE="${DISTRO_ID_LIKE,,}"
         DISTRO_NAME="${NAME}"
         DISTRO_VERSION="${VERSION_ID:-unknown}"
     elif [[ -f /etc/redhat-release ]]; then
@@ -119,19 +120,25 @@ get_pkg_family() {
 
 check_dependencies() {
     local deps=("curl" "ca-certificates")
+    local needs_install=false
 
     for dep in "${deps[@]}"; do
         if ! command -v "$dep" &>/dev/null; then
-            log_info "Installing missing dependency: ${dep}"
-            case "$PKG_FAMILY" in
-                apt)    apt-get install -y "$dep" ;;
-                dnf)    dnf install -y "$dep" ;;
-                yum)    yum install -y "$dep" ;;
-                zypper) zypper install -y "$dep" ;;
-                pacman) pacman -S --noconfirm "$dep" ;;
-            esac
+            needs_install=true
+            break
         fi
     done
+
+    if [[ "$needs_install" == true ]]; then
+        log_info "Installing missing dependencies..."
+        case "$PKG_FAMILY" in
+            apt)    apt-get update -qq && apt-get install -y "${deps[@]}" ;;
+            dnf)    dnf install -y "${deps[@]}" ;;
+            yum)    yum install -y "${deps[@]}" ;;
+            zypper) zypper install -y "${deps[@]}" ;;
+            pacman) pacman -Sy --noconfirm "${deps[@]}" ;;
+        esac
+    fi
 }
 
 #---------------------------------------------------------------------------------
