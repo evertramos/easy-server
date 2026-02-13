@@ -123,24 +123,45 @@ get_pkg_family() {
 #---------------------------------------------------------------------------------
 
 check_dependencies() {
-    local deps=("curl" "ca-certificates")
-    local needs_install=false
+    local missing=()
 
-    for dep in "${deps[@]}"; do
-        if ! command -v "$dep" &>/dev/null; then
-            needs_install=true
-            break
-        fi
-    done
+    # curl: check binary (curl-minimal on RHEL 9+ provides it)
+    if ! command -v curl &>/dev/null; then
+        missing+=("curl")
+    fi
 
-    if [[ "$needs_install" == true ]]; then
-        log_info "Installing missing dependencies..."
+    # ca-certificates: check package (not a binary)
+    case "$PKG_FAMILY" in
+        apt)
+            if ! dpkg -s ca-certificates &>/dev/null 2>&1; then
+                missing+=("ca-certificates")
+            fi
+            ;;
+        dnf|yum)
+            if ! rpm -q ca-certificates &>/dev/null 2>&1; then
+                missing+=("ca-certificates")
+            fi
+            ;;
+        zypper)
+            if ! rpm -q ca-certificates &>/dev/null 2>&1; then
+                missing+=("ca-certificates")
+            fi
+            ;;
+        pacman)
+            if ! pacman -Qi ca-certificates &>/dev/null 2>&1; then
+                missing+=("ca-certificates")
+            fi
+            ;;
+    esac
+
+    if [[ ${#missing[@]} -gt 0 ]]; then
+        log_info "Installing missing dependencies: ${missing[*]}"
         case "$PKG_FAMILY" in
-            apt)    apt-get update -qq && apt-get install -y "${deps[@]}" ;;
-            dnf)    dnf install -y "${deps[@]}" ;;
-            yum)    yum install -y "${deps[@]}" ;;
-            zypper) zypper install -y "${deps[@]}" ;;
-            pacman) pacman -Sy --noconfirm "${deps[@]}" ;;
+            apt)    apt-get update -qq && apt-get install -y "${missing[@]}" ;;
+            dnf)    dnf install -y --allowerasing "${missing[@]}" ;;
+            yum)    yum install -y "${missing[@]}" ;;
+            zypper) zypper --non-interactive install "${missing[@]}" ;;
+            pacman) pacman -Sy --noconfirm "${missing[@]}" ;;
         esac
     fi
 }

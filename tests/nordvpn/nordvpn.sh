@@ -21,6 +21,7 @@ LOG_DIR="${SCRIPT_DIR}/logs"
 PARALLEL=1
 FILTER=""
 TIMEOUT=300 # 5 minutes per container
+VERBOSE=false
 
 #---------------------------------------------------------------------------------
 # Colors
