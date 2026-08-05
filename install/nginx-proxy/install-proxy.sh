@@ -15,8 +15,15 @@ cd $NGINX_PROXY_AUTOMATION_PATH
 
 # Get current IP Address
 NET_INTERFACES=( eth0 ens3 ens4)
+
+# Prefer the host's actual default-route interface so detection works
+# regardless of naming (e.g. ens6 on Ubuntu 24.04 / IONOS), then fall back
+# to the well-known list above for backward compatibility.
+DEFAULT_IFACE=$(ip -4 route show default 2>/dev/null | awk '{print $5; exit}')
+[[ -n "$DEFAULT_IFACE" ]] && NET_INTERFACES=( "$DEFAULT_IFACE" "${NET_INTERFACES[@]}" )
+
 for i in "${NET_INTERFACES[@]}"; do
-  NET_IP=$(ip address show $i | grep "inet\b" | head -n 1 | awk '{print $2}' | cut -d/ -f1)
+  NET_IP=$(ip address show $i 2>/dev/null | grep "inet\b" | head -n 1 | awk '{print $2}' | cut -d/ -f1)
   if [[ $NET_IP =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     break
   fi
